@@ -1,28 +1,22 @@
 from kedro.pipeline import Pipeline, node, pipeline
 
-from .nodes import evaluate_model, split_data, train_model
+from .nodes import evaluate_model, train_baseline_model
 
 
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline(
         [
             node(
-                func=split_data,
-                inputs=["model_input_table", "params:model_options"],
-                outputs=["X_train", "X_test", "y_train", "y_test"],
-                name="split_data_node",
-            ),
-            node(
-                func=train_model,
-                inputs=["X_train", "y_train"],
-                outputs="regressor",
-                name="train_model_node",
+                func=train_baseline_model,
+                inputs=["X_train_preprocessed", "y_train"],
+                outputs="baseline_model",
+                name="train_baseline_model_node",
             ),
             node(
                 func=evaluate_model,
-                inputs=["regressor", "X_test", "y_test"],
-                outputs=None,
-                name="evaluate_model_node",
+                inputs=["baseline_model", "X_test_preprocessed", "y_test"],
+                outputs="baseline_model_metrics",
+                name="evaluate_baseline_model_node",
             ),
         ]
     )

@@ -26,16 +26,40 @@ cleaned_data:
 
 X_train:
   type: pandas.ParquetDataset
-  filepath: data/03_primary/X_train.parquet
+  filepath: data/05_model_input/X_train.parquet
 
 X_test:
   type: pandas.ParquetDataset
-  filepath: data/03_primary/X_test.parquet
+  filepath: data/05_model_input/X_test.parquet
 
 y_train:
   type: pandas.ParquetDataset
-  filepath: data/03_primary/y_train.parquet
+  filepath: data/05_model_input/y_train.parquet
 
 y_test:
   type: pandas.ParquetDataset
-  filepath: data/03_primary/y_test.parquet
+  filepath: data/05_model_input/y_test.parquet
+
+X_train_preprocessed:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_train_preprocessed.parquet
+
+X_test_preprocessed:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_test_preprocessed.parquet
+
+# Preprocesor model
+preprocessor:
+  type: pickle.PickleDataset
+  filepath: data/06_models/preprocessor.pkl
+
+# Models
+baseline_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/baseline_model.pkl
+  versioned: true
+
+# Metrics
+baseline_model_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/baseline_model_metrics.json

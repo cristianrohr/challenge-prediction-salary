@@ -2,3 +2,4 @@ data_processing:
   target_variable: "Salary"
   random_state: 42
   test_size: 0.2
+  cardinality_threshold: 10
