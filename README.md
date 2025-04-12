@@ -48,11 +48,36 @@ Kedro was used to structure the code.
 `pip install -r requirements.txt`
 5. Run the EDA notebook
 `jupyter notebook notebooks/01_EDA.ipynb`
-
-
+6. Run the Kedro pipeline
+`kedro run`
 
 ## Methodology
 
+Kedro was used to structure de code.
+
+### EDA
+
+Exploratory data analsysis. First a fast EDA was performed in the notebooks/01_exploratory_data_analysis.ipynb
+
+### Baseline model
+
+As suggested a DummyRegressor was implemented as the baseline model
+
+### Metrics
+
+In order to evaluate the models some regression metrics were selected
+
+ - MSE (Mean Squared Error): Average squared difference between the predicted and real salaries.
+ - RMSE (Root Mean Squared Error): Square root of MSE.
+ - R2 (R-squared): Proportion of variace in salary explained by the model.
+
 ## Results
+1. Baseline model 
+{
+"mse":2403174600.7218146
+"rmse":49022.18478119692
+"r2_score":-0.0023325074934903434
+"model_type":"DummyRegressor"
+}
 
 ## References
