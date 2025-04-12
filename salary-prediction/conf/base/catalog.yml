@@ -23,3 +23,19 @@ merged_data:
 cleaned_data:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/cleaned_data.parquet
+
+X_train:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/X_train.parquet
+
+X_test:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/X_test.parquet
+
+y_train:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/y_train.parquet
+
+y_test:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/y_test.parquet
