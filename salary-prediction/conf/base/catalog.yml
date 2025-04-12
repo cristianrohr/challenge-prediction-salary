@@ -74,6 +74,10 @@ baseline_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/baseline_model_metrics.json
 
+baseline_model_ci_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/baseline_model_ci_metrics.json
+
 linear_regression_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/linear_regression_model_metrics.json

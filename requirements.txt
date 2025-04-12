@@ -71,6 +71,7 @@ jupyterlab==4.4.0
 jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.3
 jupyterlab_widgets==3.0.14
+kaleido==0.2.1
 kedro==0.19.12
 kedro-datasets==6.0.0
 kedro-telemetry==0.6.2

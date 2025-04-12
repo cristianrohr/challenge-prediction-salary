@@ -21,7 +21,11 @@ The challenge have some mandatory features:
   - Include illustrations or images showing the results.
 
 #### Optional Features ( just the ones we have implemented):
+- Validate the model using cross-validation techniques. (3)
 - Visualize the relationships between features and the target variable (4). Included in the EDA.
+- Use a more advanced model such as Random Forest, or Neural Networks. (6)
+- Lock your dependencies - e.g., using pipenv, uv or pdm. (8)
+
 
 ## Data
 
@@ -73,11 +77,73 @@ In order to evaluate the models some regression metrics were selected
 
 ## Results
 1. Baseline model 
+
+Test:
 {
-"mse":2403174600.7218146
-"rmse":49022.18478119692
-"r2_score":-0.0023325074934903434
-"model_type":"DummyRegressor"
+  "mse": 2403174600.7218146,
+  "rmse": 49022.18478119692,
+  "r2_score": -0.0023325074934903434,
+  "model_type": "DummyRegressor"
+}
+
+Train with CV CI's:
+{
+  "mse": 2327671491.480214,
+  "rmse": 48158.40404560465,
+  "r2_score": -0.03205210959908009,
+  "mse_conf_interval": [
+    1941110039.546183,
+    2714232943.414245
+  ],
+  "rmse_conf_interval": [
+    44125.477453554595,
+    52191.330637654704
+  ],
+  "r2_score_conf_interval": [
+    -0.07021907803626393,
+    0.006114858838103733
+  ],
+  "model_type": "DummyRegressor"
+}
+
+2. Linear regression
+{
+  "mse": 245295119.11827332,
+  "rmse": 15550.531658798393,
+  "r2_score": 0.8913156707773544,
+  "mse_conf_interval": [
+    165826615.19786328,
+    324763623.03868335
+  ],
+  "rmse_conf_interval": [
+    12962.293461212596,
+    18138.769856384188
+  ],
+  "r2_score_conf_interval": [
+    0.8620612942374825,
+    0.9205700473172264
+  ],
+  "model_type": "LinearRegression"
+}
+
+3. RandomForestRegressor
+{
+  "mse": 237083576.69463697,
+  "rmse": 15368.801466421832,
+  "r2_score": 0.8934237853681604,
+  "mse_conf_interval": [
+    196318485.91431722,
+    277848667.4749567
+  ],
+  "rmse_conf_interval": [
+    14063.932685338918,
+    16673.670247504746
+  ],
+  "r2_score_conf_interval": [
+    0.8703175955357493,
+    0.9165299752005714
+  ],
+  "model_type": "RandomForestRegressor"
 }
 
 ## References

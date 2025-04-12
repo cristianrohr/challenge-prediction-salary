@@ -1,0 +1,2 @@
+reporting:
+  rf_plot_filepath: data/08_reporting/randomforestregressor_model_metrics.png

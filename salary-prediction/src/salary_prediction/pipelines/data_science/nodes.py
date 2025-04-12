@@ -33,7 +33,7 @@ def train_baseline_model(X_train: ParquetDataset, y_train: ParquetDataset) -> Du
 
     return baseline_model
 
-def train_linear_regression(X_train: pd.DataFrame, y_train: pd.Series) -> LinearRegression:
+def train_linear_regression(X_train:ParquetDataset, y_train: ParquetDataset) -> LinearRegression:
     """Trains a linear regression model.
 
     Args:
@@ -50,7 +50,7 @@ def train_linear_regression(X_train: pd.DataFrame, y_train: pd.Series) -> Linear
     linear_regression.fit(X_train, y_train)
     return linear_regression
 
-def train_randomforestregressor_model(X_train: pd.DataFrame, y_train: pd.Series, parameters: Dict) -> RandomForestRegressor:
+def train_randomforestregressor_model(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> RandomForestRegressor:
     """Trains a Random Forest Regressor model.
 
     Args:
@@ -75,7 +75,7 @@ def train_randomforestregressor_model(X_train: pd.DataFrame, y_train: pd.Series,
 
 
 def evaluate_model(
-    model, X_test: pd.DataFrame, y_test: pd.Series
+    model, X_test: ParquetDataset, y_test: ParquetDataset
 ) -> dict[str, float]:
     """
     Calculates and returns regression performance metrics.
@@ -103,7 +103,7 @@ def evaluate_model(
 
 
 def evaluate_model_with_cv(
-    model, X_train: pd.DataFrame, y_train: pd.Series, parameters: dict
+    model, X_train: ParquetDataset, y_train: ParquetDataset, parameters: dict
 ) -> dict[str, float]:
     """
     Calculates and returns regression performance metrics using cross-validation 
