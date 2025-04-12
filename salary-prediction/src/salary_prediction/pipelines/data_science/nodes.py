@@ -10,6 +10,8 @@ from typing import Dict
 import numpy as np
 from sklearn.model_selection import cross_val_score
 import scipy.stats as st
+from sklearn.ensemble import RandomForestRegressor
+
 
 def train_baseline_model(X_train: ParquetDataset, y_train: ParquetDataset) -> DummyRegressor:
     """Trains a baseline model using DummyRegressor.
@@ -41,9 +43,35 @@ def train_linear_regression(X_train: pd.DataFrame, y_train: pd.Series) -> Linear
     Returns:
         Trained linear regression model.
     """
+
+    y_train = y_train.squeeze()
+
     linear_regression = LinearRegression()
     linear_regression.fit(X_train, y_train)
     return linear_regression
+
+def train_randomforestregressor_model(X_train: pd.DataFrame, y_train: pd.Series, parameters: Dict) -> RandomForestRegressor:
+    """Trains a Random Forest Regressor model.
+
+    Args:
+        X_train: Training features
+        y_train: Training target
+        parameters: Parameters defined in parameters.yml
+
+    Returns:
+        Trained Random Forest Regressor model.
+    """
+
+    y_train = y_train.squeeze()
+
+    rf_model = RandomForestRegressor(
+        n_estimators=parameters["rf_params"]["n_estimators"],
+        max_depth=parameters["rf_params"]["max_depth"],
+        random_state=parameters["random_state"],
+    )
+    rf_model.fit(X_train, y_train)
+
+    return rf_model
 
 
 def evaluate_model(
@@ -90,6 +118,10 @@ def evaluate_model_with_cv(
     Returns:
         Dictionary with MSE, RMSE, and R2 scores along with 95% confidence intervals.
     """
+
+    y_train = y_train.squeeze()
+
+
     mse_scores = cross_val_score(model, X_train, y_train, cv=parameters["cv"], scoring="neg_mean_squared_error")
     rmse_scores = np.sqrt(-mse_scores)  # Negate MSE for RMSE
     r2_scores = cross_val_score(model, X_train, y_train, cv=parameters["cv"], scoring="r2")
@@ -111,3 +143,5 @@ def evaluate_model_with_cv(
         "r2_score_conf_interval": r2_conf_int,
         "model_type": str(type(model).__name__),
     }
+
+    
