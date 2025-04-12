@@ -14,7 +14,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=clean_data,
-                inputs="merged_data",
+                inputs=["merged_data",  "params:data_processing"],
                 outputs="cleaned_data",
                 name="clean_data_node",
             )

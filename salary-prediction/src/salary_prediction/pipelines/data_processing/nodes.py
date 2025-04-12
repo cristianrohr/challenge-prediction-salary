@@ -13,7 +13,7 @@ def merge_datasets(salary_df: pd.DataFrame, people_df: pd.DataFrame, description
     """
     return people_df.merge(salary_df, on="id", how = "inner")
 
-def clean_data(data: pd.DataFrame) -> pd.DataFrame:
+def clean_data(data: pd.DataFrame, parameters: dict) -> pd.DataFrame:
     """
     Clean the data.
 
@@ -28,6 +28,6 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
 
     # Drop the ID column and rows were salary is NA or NULL
     df = df.drop(columns=["id"])
-    df = df.dropna(subset=["Salary"])
+    df = df.dropna(subset=[parameters["target_variable"]])
 
     return df
