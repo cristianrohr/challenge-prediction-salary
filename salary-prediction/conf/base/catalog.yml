@@ -16,3 +16,10 @@ descriptions_raw:
   type: pandas.CSVDataset
   filepath: data/01_raw/descriptions.csv
 
+merged_data:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/merged_data.parquet
+
+cleaned_data:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/cleaned_data.parquet
