@@ -1,6 +1,6 @@
 from kedro.pipeline import Pipeline, node, pipeline
 
-from .nodes import evaluate_model, train_baseline_model
+from .nodes import evaluate_model, train_baseline_model, train_linear_regression,evaluate_model_with_cv
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -18,5 +18,18 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs="baseline_model_metrics",
                 name="evaluate_baseline_model_node",
             ),
+            node(
+                func=train_linear_regression,
+                inputs=["X_train_preprocessed", "y_train"],
+                outputs="linear_regression_model",
+                name="train_linear_regression_model_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["linear_regression_model", "X_train_preprocessed", "y_train", "params:data_science"],
+                outputs="linear_regression_model_metrics",
+                name="evaluate_linear_regression_model_node",
+            ),
+
         ]
     )

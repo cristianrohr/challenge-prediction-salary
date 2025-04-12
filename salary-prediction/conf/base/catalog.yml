@@ -59,7 +59,16 @@ baseline_model:
   filepath: data/06_models/baseline_model.pkl
   versioned: true
 
+linear_regression_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/linear_regression_model.pkl
+  versioned: true
+
 # Metrics
 baseline_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/baseline_model_metrics.json
+
+linear_regression_model_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/linear_regression_model_metrics.json
