@@ -69,6 +69,11 @@ linear_regression_model:
   filepath: data/06_models/linear_regression_model.pkl
   versioned: true
 
+lasso_regression_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/lasso_regression_model.pkl
+  versioned: true
+
 randomforestregressor_model:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model.pkl

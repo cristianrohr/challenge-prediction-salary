@@ -22,7 +22,8 @@ The challenge have some mandatory features:
 
 #### Optional Features ( just the ones we have implemented):
 - Validate the model using cross-validation techniques. (3)
-- Visualize the relationships between features and the target variable (4). Included in the EDA.
+- Visualize the relationships between features and the target variable (4). Included in the EDA. (4)
+- Use an interpretation tool to explain the contribution of each feature - e.g. SHAP (5)
 - Use a more advanced model such as Random Forest, or Neural Networks. (6)
 - Lock your dependencies - e.g., using pipenv, uv or pdm. (8)
 
@@ -142,6 +143,26 @@ Train with CV CI's:
   "r2_score_conf_interval": [
     0.8703175955357493,
     0.9165299752005714
+  ],
+  "model_type": "RandomForestRegressor"
+}
+
+4. RandomForestRegressor + SHAP feature selection
+{
+  "mse": 244666229.32381254,
+  "rmse": 15614.111247418661,
+  "r2_score": 0.889959794756901,
+  "mse_conf_interval": [
+    203983160.220127,
+    285349298.4274981
+  ],
+  "rmse_conf_interval": [
+    14322.423105951186,
+    16905.799388886135
+  ],
+  "r2_score_conf_interval": [
+    0.8659463970975693,
+    0.9139731924162328
   ],
   "model_type": "RandomForestRegressor"
 }

@@ -78,6 +78,26 @@ def train_randomforestregressor_model(X_train: ParquetDataset, y_train: ParquetD
     return rf_model
 
 
+def train_lasso_regression(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> Lasso:
+    """Trains a Lasso Regression model.
+
+    Args:
+        X_train: Training features
+        y_train: Training target
+        parameters: Parameters defined in parameters.yml
+
+    Returns:
+        Trained Lasso Regression model.
+    """
+
+    y_train = y_train.squeeze()
+
+    lasso_model = Lasso(alpha=parameters["lasso_params"]["alpha"])
+    lasso_model.fit(X_train, y_train)
+
+    return lasso_model
+
+
 def evaluate_model(
     model, X_test: ParquetDataset, y_test: ParquetDataset
 ) -> dict[str, float]:
