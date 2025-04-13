@@ -1,2 +1,3 @@
 reporting:
   rf_plot_filepath: data/08_reporting/randomforestregressor_model_metrics.png
+  shap_output_dir: data/08_reporting/

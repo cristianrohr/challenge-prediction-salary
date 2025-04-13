@@ -2,7 +2,7 @@ from kedro.pipeline import Pipeline, node, pipeline
 
 from .nodes import (
     evaluate_model, train_baseline_model, train_linear_regression,evaluate_model_with_cv,
-    train_randomforestregressor_model)
+    train_randomforestregressor_model, train_randomforestregressor_with_shap)
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -50,5 +50,18 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs="randomforestregressor_model_metrics",
                 name="evaluate_randomforestregressor_model_node",
             ),
+            node(
+                func=train_randomforestregressor_with_shap,
+                inputs=["X_train_preprocessed", "y_train", "params:data_science"],
+                outputs=["randomforestregressor_model_with_shap",  "X_train_selected_shap"],
+                name="train_randomforestregressor_model_with_shap_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["randomforestregressor_model_with_shap", "X_train_selected_shap", "y_train", "params:data_science"],
+                outputs="randomforestregressor_model_with_shap_metrics",
+                name="evaluate_randomforestregressor_model_with_shap_node",
+            ),
+
         ]
     )
