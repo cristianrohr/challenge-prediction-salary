@@ -48,6 +48,11 @@ X_test_preprocessed:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_test_preprocessed.parquet
 
+X_train_selected_shap:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_train_selected_shap.parquet
+
+
 # Preprocesor model
 preprocessor:
   type: pickle.PickleDataset
@@ -69,6 +74,11 @@ randomforestregressor_model:
   filepath: data/06_models/randomforestregressor_model.pkl
   versioned: true
 
+randomforestregressor_model_with_shap:
+  type: pickle.PickleDataset
+  filepath: data/06_models/randomforestregressor_model_with_shap.pkl
+  versioned: true
+
 # Metrics
 baseline_model_metrics:
   type: json.JSONDataset
@@ -85,3 +95,7 @@ linear_regression_model_metrics:
 randomforestregressor_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_metrics.json
+
+randomforestregressor_model_with_shap_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/randomforestregressor_model_metrics_with_shap.json

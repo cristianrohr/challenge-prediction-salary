@@ -6,3 +6,8 @@ data_science:
   rf_params:
     n_estimators: 100
     max_depth: 5
+  feature_selection:
+    method: "top_n"  # Options: "top_n", "custom", "threshold"
+    top_n: 5  # Use top 3 features
+    custom_features: ["Age", "Years of Experience", "Job Title"]  # Used when method is "custom"
+    importance_threshold: 1000  # Used when method is "threshold"
