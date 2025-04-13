@@ -150,13 +150,14 @@ def evaluate_model_with_cv(
 
 
 
-def shap_feature_selection(X_train: pd.DataFrame, y_train: pd.Series, model, output_dir: str = "data/08_reporting") -> pd.DataFrame:
+def shap_feature_selection(X_train: pd.DataFrame, y_train: pd.Series, model, parameters: dict, output_dir: str = "data/08_reporting") -> pd.DataFrame:
     """Selects important features using SHAP and generates a report and plot.
 
     Args:
         X_train: Training features.
         y_train: Training target.
         model: Trained machine learning model.
+        parameters: Parameters from yml file
         output_dir: Directory where the report and plot will be saved.
 
     Returns:
@@ -181,9 +182,18 @@ def shap_feature_selection(X_train: pd.DataFrame, y_train: pd.Series, model, out
     shap_importance = np.mean(np.abs(shap_values), axis=0)
     feature_importance = pd.Series(shap_importance, index=X_train.columns)
 
-    # Select top features based on SHAP importance
-    selected_features = feature_importance.nlargest(10).index  # Selecting top 10 features
-    X_train_selected = X_train[selected_features]
+    # Select features based on the method specied in the parameters
+    selection_method = parameters["feature_selection"]["method"]
+
+    if selection_method == "custom":
+        custom_features = parameters.get("feature_selection", {}).get("custom_features", [])
+        selected_features = [f for f in custom_features if f in X_train.columns]
+    elif selection_method == "threshold":
+        threshold = parameters.get("feature_selection", {}).get("importance_threshold", 1000)
+        selected_features = feature_importance[feature_importance >= threshold].index.tolist()
+    else:  # Default to "top_n"
+        top_n = parameters.get("feature_selection", {}).get("top_n", 10)
+        selected_features = feature_importance.nlargest(top_n).index.tolist()
 
     # Generate SHAP summary plot (global feature importance)
     plt.figure(figsize=(10, 8))  # Set figure size explicitly
@@ -210,7 +220,7 @@ def shap_feature_selection(X_train: pd.DataFrame, y_train: pd.Series, model, out
             f.write(f"{feature}: {importance}\n")
 
     # Return the dataset with selected features
-    return X_train_selected
+    return X_train[selected_features]
 
 
 def train_randomforestregressor_with_shap(
@@ -246,7 +256,7 @@ def train_randomforestregressor_with_shap(
     rf_model.fit(X_train, y_train)
 
     # Perform feature selection using SHAP
-    X_train_selected = shap_feature_selection(X_train, y_train, rf_model)
+    X_train_selected = shap_feature_selection(X_train, y_train, rf_model, parameters)
 
     # Train the final model on the selected features
     rf_model_selected = RandomForestRegressor(
