@@ -167,4 +167,24 @@ Train with CV CI's:
   "model_type": "RandomForestRegressor"
 }
 
+5. Lasso
+{
+  "mse": 245239583.6016566,
+  "rmse": 15548.702211450833,
+  "r2_score": 0.8913466435190515,
+  "mse_conf_interval": [
+    165741747.2817182,
+    324737419.921595
+  ],
+  "rmse_conf_interval": [
+    12959.958157532057,
+    18137.44626536961
+  ],
+  "r2_score_conf_interval": [
+    0.8621360968999312,
+    0.9205571901381717
+  ],
+  "model_type": "Lasso"
+}
+
 ## References

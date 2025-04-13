@@ -41,7 +41,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=train_lasso_regression,
-                inputs=["X_train_preprocessed", "y_train"],
+                inputs=["X_train_preprocessed", "y_train", "params:data_science"],
                 outputs="lasso_regression_model",
                 name="train_lasso_regression_model_node",
             ),
