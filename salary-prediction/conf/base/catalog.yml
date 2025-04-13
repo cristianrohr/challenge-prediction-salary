@@ -69,6 +69,11 @@ linear_regression_model:
   filepath: data/06_models/linear_regression_model.pkl
   versioned: true
 
+lasso_regression_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/lasso_regression_model.pkl
+  versioned: true
+
 randomforestregressor_model:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model.pkl
@@ -91,6 +96,10 @@ baseline_model_ci_metrics:
 linear_regression_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/linear_regression_model_metrics.json
+
+lasso_regression_model_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/lasso_regression_model_metrics.json
 
 randomforestregressor_model_metrics:
   type: json.JSONDataset

@@ -2,7 +2,8 @@ import logging
 
 import pandas as pd
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
+
 from sklearn.metrics import max_error, mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from kedro_datasets.pandas import ParquetDataset
@@ -76,6 +77,26 @@ def train_randomforestregressor_model(X_train: ParquetDataset, y_train: ParquetD
     rf_model.fit(X_train, y_train)
 
     return rf_model
+
+
+def train_lasso_regression(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> Lasso:
+    """Trains a Lasso Regression model.
+
+    Args:
+        X_train: Training features
+        y_train: Training target
+        parameters: Parameters defined in parameters.yml
+
+    Returns:
+        Trained Lasso Regression model.
+    """
+
+    y_train = y_train.squeeze()
+
+    lasso_model = Lasso(alpha=parameters["lasso_params"]["alpha"])
+    lasso_model.fit(X_train, y_train)
+
+    return lasso_model
 
 
 def evaluate_model(
