@@ -189,3 +189,13 @@ xgboost_model_optimized_metrics:
 randomforestregressor_model_with_shap_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_metrics_with_shap.json
+
+best_model_result:
+  type: json.JSONDataset
+  filepath: data/08_reporting/best_model_result.json
+
+sorted_model_metrics:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/sorted_model_metrics.csv
+
+

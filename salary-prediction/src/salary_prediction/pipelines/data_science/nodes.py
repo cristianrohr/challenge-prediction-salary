@@ -15,7 +15,11 @@ import shap
 import shap.plots
 import os
 import matplotlib.pyplot as plt
+import random
 
+os.environ["PYTHONHASHSEED"] = "42"
+random.seed(42)
+np.random.seed(42)
 
 def train_baseline_model(X_train: ParquetDataset, y_train: ParquetDataset) -> DummyRegressor:
     """Trains a baseline model using DummyRegressor.
@@ -87,11 +91,7 @@ def optimize_randomforest_hyperparameters(X_train: ParquetDataset, y_train: Parq
         
     Returns:
         Dictionary with optimized hyperparameters
-    """
-    import optuna
-    from sklearn.ensemble import RandomForestRegressor
-    from sklearn.model_selection import cross_val_score
-    
+    """   
     y_train = y_train.squeeze()
     
     def objective(trial):
@@ -118,14 +118,16 @@ def optimize_randomforest_hyperparameters(X_train: ParquetDataset, y_train: Parq
             X_train, 
             y_train, 
             cv=parameters["cv"],
-            scoring='neg_mean_squared_error'
+            scoring='neg_mean_squared_error',
+            n_jobs=1
         )
         
         # Return the mean negative MSE (Optuna minimizes the objective)
         return cv_scores.mean()
     
     # Create and run the study
-    study = optuna.create_study(direction='maximize')
+    sampler = optuna.samplers.TPESampler(seed=parameters["random_state"])
+    study = optuna.create_study(direction='maximize', sampler=sampler)
     study.optimize(
         objective, 
         n_trials=parameters["rf_optuna"]["n_trials"],
@@ -173,7 +175,9 @@ def train_xgboost_model(X_train: pd.DataFrame, y_train: pd.Series, parameters: D
         subsample=parameters["xgb_params"]["subsample"],
         colsample_bytree=parameters["xgb_params"]["colsample_bytree"],
         random_state=parameters["random_state"],
-        n_jobs=-1
+        tree_method="hist",          # Ensures deterministic hist-based tree
+        enable_categorical=False,    # Avoid automatic detection
+        n_jobs=1                     # Forces single-threaded execution
     )
     xgb_model.fit(X_train, y_train)
     return xgb_model
@@ -195,17 +199,21 @@ def optimize_xgboost_hyperparameters(X_train: pd.DataFrame, y_train: pd.Series, 
         model = XGBRegressor(
             **param_grid,
             random_state=parameters["random_state"],
-            n_jobs=-1,
+            tree_method="hist",          # Ensures deterministic hist-based tree
+            enable_categorical=False,    # Avoid automatic detection
+            n_jobs=1                     # Forces single-threaded execution
         )
 
         scores = cross_val_score(
             model, X_train, y_train,
             cv=parameters["cv"],
-            scoring="neg_mean_squared_error"
+            scoring="neg_mean_squared_error",
+            n_jobs=1
         )
         return scores.mean()
 
-    study = optuna.create_study(direction="maximize")
+    sampler = optuna.samplers.TPESampler(seed=parameters["random_state"])
+    study = optuna.create_study(direction='maximize', sampler=sampler)
     study.optimize(
         objective,
         n_trials=parameters["xgb_optuna"]["n_trials"],
@@ -257,6 +265,7 @@ def train_elastic_net(X_train: ParquetDataset, y_train: ParquetDataset, paramete
     elastic_net_model = ElasticNet(
         alpha=parameters["elastic_net_params"]["alpha"],
         l1_ratio=parameters["elastic_net_params"]["l1_ratio"],
+        selection='cyclic'
     )
     elastic_net_model.fit(X_train, y_train)
 
@@ -285,7 +294,8 @@ def optimize_elastic_net_hyperparameters(X_train: ParquetDataset, y_train: Parqu
         model = ElasticNet(
             alpha=alpha,
             l1_ratio=l1_ratio,
-            random_state=parameters["random_state"]
+            random_state=parameters["random_state"],
+            selection = 'cyclic'
         )
         
         # Use cross-validation to evaluate the model
@@ -294,14 +304,16 @@ def optimize_elastic_net_hyperparameters(X_train: ParquetDataset, y_train: Parqu
             X_train, 
             y_train, 
             cv=parameters["cv"],
-            scoring='neg_mean_squared_error'
+            scoring='neg_mean_squared_error',
+            n_jobs=1
         )
         
         # Return the mean negative MSE (Optuna minimizes the objective)
         return cv_scores.mean()
     
     # Create and run the study
-    study = optuna.create_study(direction='maximize')
+    sampler = optuna.samplers.TPESampler(seed=parameters["random_state"])
+    study = optuna.create_study(direction='maximize', sampler=sampler)
     study.optimize(
         objective, 
         n_trials=parameters["elastic_net_optuna"]["n_trials"],
@@ -371,9 +383,9 @@ def evaluate_model_with_cv(
     y_train = y_train.squeeze()
 
 
-    mse_scores = cross_val_score(model, X_train, y_train, cv=parameters["cv"], scoring="neg_mean_squared_error")
+    mse_scores = cross_val_score(model, X_train, y_train, cv=parameters["cv"], scoring="neg_mean_squared_error", n_jobs=1)
     rmse_scores = np.sqrt(-mse_scores)  # Negate MSE for RMSE
-    r2_scores = cross_val_score(model, X_train, y_train, cv=parameters["cv"], scoring="r2")
+    r2_scores = cross_val_score(model, X_train, y_train, cv=parameters["cv"], scoring="r2", n_jobs=1)
 
     mse_mean = -mse_scores.mean()
     rmse_mean = rmse_scores.mean()

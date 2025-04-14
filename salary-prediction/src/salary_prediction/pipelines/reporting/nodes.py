@@ -3,6 +3,88 @@ import json
 import plotly.graph_objects as go
 import numpy as np
 from plotly.subplots import make_subplots  # Import make_subplots
+from typing import List, Dict
+import pandas as pd
+
+def select_best_model(
+    all_metrics: list[dict],  # list of all model evaluation dicts
+    selection_metric: str = "rmse",  # metric to select best model
+    ascending: bool = True  # True for metrics like RMSE/MSE, False for R²
+) -> dict:
+    """
+    Selects the best model based on a given metric.
+
+    Args:
+        all_metrics: List of model metrics dictionaries.
+        selection_metric: Metric to base the comparison on.
+        ascending: Whether lower is better (True for MSE/RMSE).
+
+    Returns:
+        A dictionary with the best model's name and metrics.
+    """
+    best = sorted(all_metrics, key=lambda m: m[selection_metric], reverse=not ascending)[0]
+    return {
+        "best_model_name": best["model_type"],
+        "best_model_metrics": best
+    }
+
+def generate_comparison_report(all_metrics: list[dict], output_path: str):
+    """
+    Saves all model evaluation results to a JSON report.
+
+    Args:
+        all_metrics: List of evaluation dictionaries.
+        output_path: Path to save the JSON file.
+    """
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(all_metrics, f, indent=4)
+
+def generate_sorted_metrics_csv(
+    all_metrics: list[dict],
+    sort_by: str = "rmse",
+    ascending: bool = True
+):
+    """
+    Generates a CSV comparing model metrics, sorted by a chosen metric.
+
+    Args:
+        all_metrics: List of model metrics dictionaries.
+        sort_by: Metric to sort the CSV by.
+        ascending: If True, sort in ascending order (use for RMSE/MSE).
+    """
+
+    # Normalize list of dicts into a DataFrame
+    df = pd.json_normalize(all_metrics)
+
+    # Drop CI columns if they exist (or you can keep them)
+    ci_cols = [col for col in df.columns if "conf_interval" in col]
+    df = df.drop(columns=ci_cols, errors="ignore")
+
+    # Sort and save
+    df_sorted = df.sort_values(by=sort_by, ascending=ascending)
+    return df_sorted
+
+def load_all_metrics_from_folder(metrics_folder: str) -> List[Dict]:
+    """
+    Loads all JSON files from a folder and returns them as a list of dicts.
+
+    Args:
+        metrics_folder: Path to the folder containing metric JSON files.
+
+    Returns:
+        List of model metrics as dictionaries.
+    """
+    all_metrics = []
+
+    for file_name in os.listdir(metrics_folder):
+        if file_name.endswith(".json"):
+            file_path = os.path.join(metrics_folder, file_name)
+            with open(file_path, "r") as f:
+                metrics = json.load(f)
+                all_metrics.append(metrics)
+
+    return all_metrics
 
 def plot_metrics(metrics: dict, output_filepath: str):
     """

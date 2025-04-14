@@ -6,6 +6,9 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 import logging
+import os
+
+os.environ["PYTHONHASHSEED"] = "42"
 
 log = logging.getLogger(__name__)
 
@@ -99,7 +102,7 @@ def build_preprocessing_pipeline(X_train: pd.DataFrame, X_test: pd.DataFrame, pa
 
     low_card_pipeline = Pipeline([
         ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore", drop="first")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", drop="first", sparse_output=False)),
     ])
 
     high_card_pipeline = Pipeline([
