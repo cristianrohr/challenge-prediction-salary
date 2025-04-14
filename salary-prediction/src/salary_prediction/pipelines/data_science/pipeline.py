@@ -3,7 +3,7 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     evaluate_model, train_baseline_model, train_elastic_net, train_linear_regression,evaluate_model_with_cv,
     train_randomforestregressor_model, train_randomforestregressor_with_shap,
-    train_lasso_regression, train_elastic_net)
+    train_lasso_regression, train_elastic_net, optimize_elastic_net_hyperparameters)
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -74,6 +74,24 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["elastic_net_model", "X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="elastic_net_model_metrics",
                 name="evaluate_elastic_net_model_node",
+            ),
+            node(
+                func=optimize_elastic_net_hyperparameters,
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="optimized_elastic_net_params",
+                name="optimize_elastic_net_hyperparameters_node",
+            ),
+            node(
+                func=train_elastic_net,
+                inputs=["X_train_preprocessed_v2", "y_train", "optimized_elastic_net_params"],
+                outputs="elastic_net_model_optimized",
+                name="train_elastic_net_model_optimized_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["elastic_net_model_optimized", "X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="elastic_net_model_optimized_metrics",
+                name="evaluate_elastic_net_model_optimized_node",
             ),
             node(
                 func=train_randomforestregressor_model,

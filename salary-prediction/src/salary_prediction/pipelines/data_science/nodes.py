@@ -1,9 +1,8 @@
 import logging
-
 import pandas as pd
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression, Lasso, ElasticNet
-
+import optuna
 from sklearn.metrics import max_error, mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from kedro_datasets.pandas import ParquetDataset
@@ -120,6 +119,66 @@ def train_elastic_net(X_train: ParquetDataset, y_train: ParquetDataset, paramete
 
     return elastic_net_model
 
+def optimize_elastic_net_hyperparameters(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> Dict:
+    """Optimizes hyperparameters for Elastic Net using Optuna.
+    
+    Args:
+        X_train: Training features
+        y_train: Training target
+        parameters: Parameters defined in parameters.yml
+        
+    Returns:
+        Dictionary with optimized hyperparameters
+    """
+    
+    y_train = y_train.squeeze()
+    
+    def objective(trial):
+        # Define the hyperparameter search space
+        alpha = trial.suggest_float('alpha', 0.001, 1.0, log=True)
+        l1_ratio = trial.suggest_float('l1_ratio', 0.01, 1.0)
+        
+        # Create and evaluate model with current hyperparameters
+        model = ElasticNet(
+            alpha=alpha,
+            l1_ratio=l1_ratio,
+            random_state=parameters["random_state"]
+        )
+        
+        # Use cross-validation to evaluate the model
+        cv_scores = cross_val_score(
+            model, 
+            X_train, 
+            y_train, 
+            cv=parameters["cv"],
+            scoring='neg_mean_squared_error'
+        )
+        
+        # Return the mean negative MSE (Optuna minimizes the objective)
+        return cv_scores.mean()
+    
+    # Create and run the study
+    study = optuna.create_study(direction='maximize')
+    study.optimize(
+        objective, 
+        n_trials=parameters["elastic_net_optuna"]["n_trials"],
+        timeout=parameters["elastic_net_optuna"].get("timeout", None)
+    )
+    
+    # Get the best parameters
+    best_params = study.best_params
+    best_value = study.best_value
+    
+    logging.info(f"Best parameters: {best_params}")
+    logging.info(f"Best CV score: {best_value}")
+    
+    # Return best parameters
+    return {
+        "elastic_net_params": {
+            "alpha": best_params["alpha"],
+            "l1_ratio": best_params["l1_ratio"]
+        }
+    }
 
 def evaluate_model(
     model, X_test: ParquetDataset, y_test: ParquetDataset
