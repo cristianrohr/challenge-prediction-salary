@@ -52,6 +52,18 @@ def create_pipeline(**kwargs) -> Pipeline:
                 name="evaluate_lasso_regression_model_node",
             ),
             node(
+                func=train_lasso_regression,
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="lasso_regression_model_v2",
+                name="train_lasso_regression_model_v2_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["lasso_regression_model_v2", "X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="lasso_regression_model_v2_metrics",
+                name="evaluate_lasso_regression_model_v2_node",
+            ),
+            node(
                 func=train_randomforestregressor_model,
                 inputs=["X_train_preprocessed", "y_train", "params:data_science"],
                 outputs="randomforestregressor_model",
@@ -63,6 +75,20 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs="randomforestregressor_model_metrics",
                 name="evaluate_randomforestregressor_model_node",
             ),
+
+            node(
+                func=train_randomforestregressor_model,
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="randomforestregressor_model_v2",
+                name="train_randomforestregressor_model_v2_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["randomforestregressor_model_v2", "X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="randomforestregressor_model_v2_metrics",
+                name="evaluate_randomforestregressor_model_v2_node",
+            ),
+
             node(
                 func=train_randomforestregressor_with_shap,
                 inputs=["X_train_preprocessed", "y_train", "params:data_science"],

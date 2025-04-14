@@ -52,11 +52,27 @@ X_train_selected_shap:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_train_selected_shap.parquet
 
+X_train_preprocessed_v2:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_train_preprocessed_v2.parquet
+
+X_test_preprocessed_v2:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_test_preprocessed_v2.parquet
+
+X_train_selected_shap_v2:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_train_selected_shap_v2.parquet
+
 
 # Preprocesor model
 preprocessor:
   type: pickle.PickleDataset
   filepath: data/06_models/preprocessor.pkl
+
+preprocessor_v2:
+  type: pickle.PickleDataset
+  filepath: data/06_models/preprocessor_v2.pkl
 
 # Models
 baseline_model:
@@ -74,9 +90,19 @@ lasso_regression_model:
   filepath: data/06_models/lasso_regression_model.pkl
   versioned: true
 
+lasso_regression_model_v2:
+  type: pickle.PickleDataset
+  filepath: data/06_models/lasso_regression_model_v2.pkl
+  versioned: true
+
 randomforestregressor_model:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model.pkl
+  versioned: true
+
+randomforestregressor_model_v2:
+  type: pickle.PickleDataset
+  filepath: data/06_models/randomforestregressor_model_v2.pkl
   versioned: true
 
 randomforestregressor_model_with_shap:
@@ -101,9 +127,17 @@ lasso_regression_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/lasso_regression_model_metrics.json
 
+lasso_regression_model_v2_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/lasso_regression_model_v2_metrics.json
+
 randomforestregressor_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_metrics.json
+
+randomforestregressor_model_v2_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/randomforestregressor_model_v2_metrics.json
 
 randomforestregressor_model_with_shap_metrics:
   type: json.JSONDataset

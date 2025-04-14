@@ -1,6 +1,6 @@
 from kedro.pipeline import Pipeline, node, pipeline
 
-from .nodes import clean_data, merge_datasets, split_data, build_preprocessing_pipeline
+from .nodes import clean_data, merge_datasets, split_data, build_preprocessing_pipeline, build_preprocessing_pipeline_v2
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -29,6 +29,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["X_train", "X_test", "params:data_processing"],
                 outputs=["X_train_preprocessed", "X_test_preprocessed", "preprocessor"],
                 name="build_preprocessing_pipeline_node",
+            ),
+            node(
+                func=build_preprocessing_pipeline_v2,
+                inputs=["X_train", "X_test", "params:data_processing"],
+                outputs=["X_train_preprocessed_v2", "X_test_preprocessed_v2", "preprocessor_v2"],
+                name="build_preprocessing_pipeline_v2_node",
             ),
         ]
     )
