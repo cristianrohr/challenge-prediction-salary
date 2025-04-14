@@ -3,3 +3,9 @@ data_processing:
   random_state: 42
   test_size: 0.2
   cardinality_threshold: 10
+  ordinal_column: Education Level
+  education_level_order:
+    - "Bachelor's"
+    - "Master's"
+    - "PhD"
+  job_title_column: Job Title
