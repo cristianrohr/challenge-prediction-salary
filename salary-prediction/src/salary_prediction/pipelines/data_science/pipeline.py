@@ -4,7 +4,7 @@ from .nodes import (
     evaluate_model, train_baseline_model, train_elastic_net, train_linear_regression,evaluate_model_with_cv,
     train_randomforestregressor_model, train_randomforestregressor_with_shap,
     train_lasso_regression, train_elastic_net, optimize_elastic_net_hyperparameters,
-    optimize_randomforest_hyperparameters)
+    optimize_randomforest_hyperparameters, optimize_xgboost_hyperparameters, train_xgboost_model)
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -136,6 +136,26 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs="randomforestregressor_model_optimized_metrics",
                 name="evaluate_randomforestregressor_model_optimized_node",
             ),
+
+            node(
+                func=optimize_xgboost_hyperparameters,
+                inputs=["X_train_preprocessed", "y_train", "params:data_science"],
+                outputs="optimized_xgb_params",
+                name="optimize_xgboost_hyperparameters_node",
+            ),
+            node(
+                func=train_xgboost_model,
+                inputs=["X_train_preprocessed", "y_train", "optimized_xgb_params"],
+                outputs="xgboost_model_optimized",
+                name="train_xgboost_model_optimized_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["xgboost_model_optimized", "X_train_preprocessed", "y_train", "params:data_science"],
+                outputs="xgboost_model_optimized_metrics",
+                name="evaluate_xgboost_model_optimized_node",
+            ),
+
             node(
                 func=train_randomforestregressor_with_shap,
                 inputs=["X_train_preprocessed", "y_train", "params:data_science"],

@@ -20,6 +20,15 @@ data_science:
   elastic_net_optuna:
     n_trials: 50
     timeout: 600
+  xgb_params:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+  xgb_optuna:
+    n_trials: 50
+    timeout: 600
   feature_selection:
     method: "top_n"  # Options: "top_n", "custom", "threshold"
     top_n: 5  # Use top 3 features

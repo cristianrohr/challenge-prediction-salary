@@ -151,6 +151,76 @@ def optimize_randomforest_hyperparameters(X_train: ParquetDataset, y_train: Parq
         "random_state": parameters["random_state"]
     }
 
+from xgboost import XGBRegressor
+
+def train_xgboost_model(X_train: pd.DataFrame, y_train: pd.Series, parameters: Dict) -> XGBRegressor:
+    """Trains an XGBoost Regressor model.
+
+    Args:
+        X_train: Training features.
+        y_train: Training target.
+        parameters: Parameters defined in parameters.yml.
+
+    Returns:
+        Trained XGBoost Regressor model.
+    """
+    y_train = y_train.squeeze()
+
+    xgb_model = XGBRegressor(
+        n_estimators=parameters["xgb_params"]["n_estimators"],
+        max_depth=parameters["xgb_params"]["max_depth"],
+        learning_rate=parameters["xgb_params"]["learning_rate"],
+        subsample=parameters["xgb_params"]["subsample"],
+        colsample_bytree=parameters["xgb_params"]["colsample_bytree"],
+        random_state=parameters["random_state"],
+        n_jobs=-1
+    )
+    xgb_model.fit(X_train, y_train)
+    return xgb_model
+
+def optimize_xgboost_hyperparameters(X_train: pd.DataFrame, y_train: pd.Series, parameters: Dict) -> Dict:
+    """Optimizes hyperparameters for XGBoost Regressor using Optuna."""
+
+    y_train = y_train.squeeze()
+
+    def objective(trial):
+        param_grid = {
+            "n_estimators": trial.suggest_int("n_estimators", 50, 500),
+            "max_depth": trial.suggest_int("max_depth", 3, 20),
+            "learning_rate": trial.suggest_float("learning_rate", 1e-3, 0.3, log=True),
+            "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+        }
+
+        model = XGBRegressor(
+            **param_grid,
+            random_state=parameters["random_state"],
+            n_jobs=-1,
+        )
+
+        scores = cross_val_score(
+            model, X_train, y_train,
+            cv=parameters["cv"],
+            scoring="neg_mean_squared_error"
+        )
+        return scores.mean()
+
+    study = optuna.create_study(direction="maximize")
+    study.optimize(
+        objective,
+        n_trials=parameters["xgb_optuna"]["n_trials"],
+        timeout=parameters["xgb_optuna"].get("timeout", None)
+    )
+
+    best_params = study.best_params
+    logging.info(f"Best XGBoost params: {best_params}")
+
+    return {
+        "xgb_params": best_params,
+        "random_state": parameters["random_state"]
+    }
+
+
 def train_lasso_regression(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> Lasso:
     """Trains a Lasso Regression model.
 

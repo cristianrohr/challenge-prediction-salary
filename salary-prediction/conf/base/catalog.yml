@@ -72,6 +72,10 @@ optimized_rf_params:
   type: json.JSONDataset
   filepath: data/06_models/optimized_rf_params.json
 
+optimized_xgb_params:
+  type: json.JSONDataset
+  filepath: data/06_models/optimized_xgb_params.json
+
 # Preprocesor model
 preprocessor:
   type: pickle.PickleDataset
@@ -132,6 +136,11 @@ randomforestregressor_model_with_shap:
   filepath: data/06_models/randomforestregressor_model_with_shap.pkl
   versioned: true
 
+xgboost_model_optimized:
+  type: pickle.PickleDataset
+  filepath: data/06_models/xgboost_model_optimized.pkl
+  versioned: true
+
 # Metrics
 baseline_model_metrics:
   type: json.JSONDataset
@@ -172,6 +181,10 @@ randomforestregressor_model_v2_metrics:
 randomforestregressor_model_optimized_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_optimized_metrics.json
+
+xgboost_model_optimized_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/xgboost_model_optimized_metrics.json
 
 randomforestregressor_model_with_shap_metrics:
   type: json.JSONDataset
