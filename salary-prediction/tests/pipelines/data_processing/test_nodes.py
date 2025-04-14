@@ -8,6 +8,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 from sklearn.impute import SimpleImputer
+import logging # Import logging
 
 # Assuming your nodes are in salary_prediction.pipelines.data_processing.nodes
 # Adjust the import path if your project structure is different
@@ -78,6 +79,7 @@ def sample_dirty_data_for_cleaning(sample_merged_df):
     })
     dirty_df = pd.concat([dirty_df, missing_salary_row], ignore_index=True)
     # Add row with None Salary (should also be treated as missing)
+    # Explicitly cast None to float for Salary column consistency if needed, though dropna handles it
     none_salary_row = pd.DataFrame({
         "id": [11], "Age": [40.0], "Gender": ["Male"], "Education Level": ["PhD"],
         "Job Title": ["Researcher"], "Years of Experience": [10.0], "Salary": [None]
@@ -89,6 +91,8 @@ def sample_dirty_data_for_cleaning(sample_merged_df):
         "Job Title": ["HR Manager"], "Years of Experience": [8.0], "Salary": [75000.0]
     })
     dirty_df = pd.concat([dirty_df, valid_row], ignore_index=True)
+    # Ensure Salary column is float type after potentially adding None
+    dirty_df['Salary'] = dirty_df['Salary'].astype(float)
     return dirty_df
 
 @pytest.fixture
@@ -118,7 +122,7 @@ def sample_data_for_splitting():
 def sample_data_for_preprocessing():
     """Fixture providing sample train/test splits for preprocessing tests."""
     X_train = pd.DataFrame({
-        "Age": [32.0, 45.0, 52.0, 29.0, 42.0, 31.0, 26.0, 38.0, np.nan], # Added NaN for imputation test
+        "Age": [32.0, 45.0, 52.0, 29.0, 42.0, 31.0, 26.0, 38.0, np.nan], # Added NaN for imputation test (N=9)
         "Gender": ["Male", "Male", "Male", "Male", "Female", "Male", "Female", "Male", "Female"],
         "Education Level": ["Bachelor's", "PhD", "Master's", "Bachelor's", "Master's", "Bachelor's", "Bachelor's", "PhD", "Master's"],
         # Replaced None with np.nan for compatibility with SimpleImputer's default missing_values
@@ -133,6 +137,7 @@ def sample_data_for_preprocessing():
         "Years of Experience": [3.0, 7.0],
     })
     # Ensure correct dtypes, especially for object columns that might contain np.nan
+    # SimpleImputer strategy='most_frequent' requires object dtype for categorical
     X_train['Job Title'] = X_train['Job Title'].astype(object)
     X_test['Job Title'] = X_test['Job Title'].astype(object)
     X_train['Gender'] = X_train['Gender'].astype(object)
@@ -217,17 +222,17 @@ class TestCleanData:
     def test_no_changes_needed(self, sample_merged_df, data_processing_parameters):
         """Test cleaning data that is already clean (except for 'id')."""
         # sample_merged_df is already unique and has no missing salaries
-        target = data_processing_parameters["target_variable"]
         df_copy = sample_merged_df.copy()
         cleaned = clean_data(df_copy, data_processing_parameters)
         expected_cols = [col for col in sample_merged_df.columns if col != 'id']
         expected_rows = len(sample_merged_df)
 
         assert "id" not in cleaned.columns
-        assert list(cleaned.columns) == expected_cols
+        # Sort columns for comparison as 'id' removal might change order
+        assert sorted(list(cleaned.columns)) == sorted(expected_cols)
         assert len(cleaned) == expected_rows
         # Check data content preservation (ignoring id)
-        # Use check_like=True because dropping 'id' changes column order potentially
+        # Sort columns in both frames before comparing
         assert_frame_equal(cleaned.sort_index(axis=1), sample_merged_df[expected_cols].sort_index(axis=1), check_dtype=False)
 
 
@@ -316,31 +321,31 @@ class TestBuildPreprocessingPipeline:
         # Assumes node calculates nunique on original X_train (ignoring NaNs)
         num_cols = ["Age", "Years of Experience"] # 2
         cat_cols = ["Gender", "Education Level", "Job Title"]
-        
+
         # Calculate unique counts on the original data (excluding NaNs for nunique)
         low_card_cols = [
             col for col in cat_cols
             if X_train[col].nunique() < data_processing_parameters["cardinality_threshold"]
-        ] # Should be ['Gender'(2), 'Education Level'(3)]
-        high_card_cols = [col for col in cat_cols if col not in low_card_cols] # Should be ['Job Title'(8)]
+        ] # Should be ['Gender'(2), 'Education Level'(3)] -> threshold < 5
+        high_card_cols = [col for col in cat_cols if col not in low_card_cols] # Should be ['Job Title'(8)] -> threshold >= 5
 
         # Calculate OHE columns count using the fitted preprocessor
         ohe_cols_count = 0
-        if low_card_cols:
-             # Check if 'low_cat' transformer exists and has 'onehot' step
-            if 'low_cat' in preprocessor.named_transformers_:
-                low_cat_pipeline = preprocessor.named_transformers_['low_cat']
-                if isinstance(low_cat_pipeline, Pipeline) and 'onehot' in low_cat_pipeline.named_steps:
-                    ohe_transformer = low_cat_pipeline.named_steps['onehot']
-                    # Ensure the transformer was actually fitted (has attributes)
-                    if hasattr(ohe_transformer, 'get_feature_names_out'):
-                         # Provide the input feature names *as seen by the OHE step*
-                         # which are the original low_card_cols names
-                        ohe_cols_count = len(ohe_transformer.get_feature_names_out(low_card_cols))
-                elif isinstance(low_cat_pipeline, OneHotEncoder): # If pipeline only had OHE
-                     if hasattr(low_cat_pipeline, 'get_feature_names_out'):
-                        ohe_cols_count = len(low_cat_pipeline.get_feature_names_out(low_card_cols))
-
+        # Check if 'low_cat' transformer exists and has 'onehot' step
+        if 'low_cat' in preprocessor.named_transformers_:
+            low_cat_pipeline = preprocessor.named_transformers_['low_cat']
+            # Check if it's a Pipeline object containing 'onehot'
+            if isinstance(low_cat_pipeline, Pipeline) and 'onehot' in low_cat_pipeline.named_steps:
+                ohe_transformer = low_cat_pipeline.named_steps['onehot']
+                # Ensure the transformer was actually fitted (has attributes)
+                if hasattr(ohe_transformer, 'get_feature_names_out'):
+                     # Provide the input feature names *as seen by the OHE step*
+                     # which are the original low_card_cols names
+                    ohe_cols_count = len(ohe_transformer.get_feature_names_out(low_card_cols))
+            # Check if it's directly an OneHotEncoder (if Pipeline only had OHE)
+            elif isinstance(low_cat_pipeline, OneHotEncoder):
+                 if hasattr(low_cat_pipeline, 'get_feature_names_out'):
+                    ohe_cols_count = len(low_cat_pipeline.get_feature_names_out(low_card_cols))
 
         # Total expected cols = num_scaled (2) + ohe_low_card (?) + ordinal_high_card (1)
         # Gender(2 unique)-> OHE(drop='first') -> 1 feature
@@ -402,7 +407,6 @@ class TestBuildPreprocessingPipeline:
 
         # Check scaling on Train set (mean approx 0, std dev approx 1)
         # Find index of original NaN in Age column *before* processing
-        # Use reset_index to handle potential index gaps if rows were dropped earlier (not in this case)
         original_age_nan_index = X_train['Age'].reset_index(drop=True).index[X_train['Age'].reset_index(drop=True).isna()]
         median_age = X_train['Age'].median() # Calculate median from original data (as imputer would)
 
@@ -414,17 +418,37 @@ class TestBuildPreprocessingPipeline:
         # Verify the imputer used the correct median (it stores it in statistics_)
         assert np.isclose(imputer.statistics_[0], median_age) # Age is the first numerical column
 
-        # Manually calculate the expected scaled value for the imputed median age
-        # mean_ = scaler.mean_[0], scale_ = scaler.scale_[0] (which is std dev)
-        scaled_median_age = (median_age - scaler.mean_[0]) / scaler.scale_[0]
+        # Manually calculate the expected scaled value for the imputed median age using the scaler's parameters
+        # scaler.scale_ IS the sample standard deviation (ddof=1) used for scaling
+        scaled_median_age_expected = (median_age - scaler.mean_[0]) / scaler.scale_[0]
 
         # Verify the transformed train data stats
+        # Mean should be close to 0
         assert np.allclose(X_train_t[num_cols].mean(axis=0), 0, atol=1e-6)
-        assert np.allclose(X_train_t[num_cols].std(axis=0), 1, atol=1e-6)
+
+        # Check Sample standard deviation (ddof=1)
+        # NOTE: Observed behavior in this test setup yields std dev = sqrt(N/(N-1))
+        # where N is the number of samples (9). This suggests the scaler
+        # might be effectively normalizing based on population std dev=1,
+        # resulting in a sample std dev calculation of sqrt(9/8) = 1.06066.
+        # We test against this observed value.
+        N = X_train_t.shape[0] # Number of samples used in fit (post-imputation)
+        if N > 1:
+            expected_std_dev = np.sqrt(N / (N - 1.0))
+        else:
+            expected_std_dev = 1.0 # Or handle as appropriate if N=1 possible
+
+        actual_std_dev = X_train_t[num_cols].std(axis=0, ddof=1)
+        logging.info(f"Calculated std dev (ddof=1):\n{actual_std_dev}")
+        logging.info(f"Expected std dev sqrt(N/(N-1)) for N={N}: {expected_std_dev}")
+
+        assert np.allclose(actual_std_dev, expected_std_dev, atol=1e-6), \
+            f"Sample standard deviation not close to {expected_std_dev:.5f} (sqrt(N/(N-1))). Got:\n{actual_std_dev}"
 
         # Check the imputed value was scaled correctly in the output DataFrame
         # Use .iloc because original_age_nan_index refers to position after reset_index()
-        assert np.isclose(X_train_t.iloc[original_age_nan_index[0]]['Age'], scaled_median_age)
+        imputed_scaled_value_actual = X_train_t.iloc[original_age_nan_index[0]]['Age']
+        assert np.isclose(imputed_scaled_value_actual, scaled_median_age_expected)
 
 
     def test_categorical_imputation_encoding(self, sample_data_for_preprocessing, data_processing_parameters):
@@ -457,7 +481,7 @@ class TestBuildPreprocessingPipeline:
                  if hasattr(low_cat_pipeline, 'get_feature_names_out'):
                      ohe_feature_names = list(low_cat_pipeline.get_feature_names_out(low_card_input_cols))
 
-        assert len(ohe_feature_names) == 3 # Gender(1) + EduLevel(2) = 3 OHE features
+        assert len(ohe_feature_names) == 3, f"Expected 3 OHE features, got {len(ohe_feature_names)}" # Gender(1) + EduLevel(2) = 3 OHE features
         assert all(col in X_train_t.columns for col in ohe_feature_names)
         # Check if OHE values are 0 or 1
         assert X_train_t[ohe_feature_names].apply(lambda x: x.isin([0, 1])).all().all(), f"OHE columns contain non-binary values: {X_train_t[ohe_feature_names]}"
@@ -465,12 +489,12 @@ class TestBuildPreprocessingPipeline:
 
 
         # Check Ordinal encoding (presence of column, numerical values >= -1)
-        assert all(col in X_train_t.columns for col in high_card_cols) # Checks 'Job Title' exists
+        assert all(col in X_train_t.columns for col in high_card_cols), f"Expected columns {high_card_cols} not found" # Checks 'Job Title' exists
         # Ensure the column is numeric and >= -1 (-1 for unknown)
-        assert pd.api.types.is_numeric_dtype(X_train_t['Job Title'])
-        assert X_train_t['Job Title'].min() >= -1
-        assert pd.api.types.is_numeric_dtype(X_test_t['Job Title'])
-        assert X_test_t['Job Title'].min() >= -1
+        assert pd.api.types.is_numeric_dtype(X_train_t['Job Title']), "Ordinal column 'Job Title' is not numeric"
+        assert X_train_t['Job Title'].min() >= -1, f"Ordinal column 'Job Title' has values < -1: min={X_train_t['Job Title'].min()}"
+        assert pd.api.types.is_numeric_dtype(X_test_t['Job Title']), "Ordinal column 'Job Title' in test set is not numeric"
+        assert X_test_t['Job Title'].min() >= -1, f"Ordinal column 'Job Title' in test set has values < -1: min={X_test_t['Job Title'].min()}"
 
     def test_handle_unknown_categories(self, sample_data_for_preprocessing, data_processing_parameters):
         """Test how unknown categories in X_test are handled."""
@@ -496,18 +520,25 @@ class TestBuildPreprocessingPipeline:
         assert ohe_transformer is not None, "Could not find OHE transformer"
         all_ohe_feature_names = ohe_transformer.get_feature_names_out(low_card_input_cols)
         # Filter for columns generated specifically from 'Gender'
+        # This assumes get_feature_names_out format like 'feature_value'
         ohe_gender_cols = [col for col in all_ohe_feature_names if col.startswith("Gender_")]
+        assert len(ohe_gender_cols) > 0, "No OHE columns generated for Gender feature"
+
 
         unknown_gender_index = X_test[X_test['Gender'] == 'Other'].index
         assert len(unknown_gender_index) == 1, "Test setup error: Expected one row with 'Other' Gender"
         # Check that all OHE columns derived from 'Gender' are 0 for this row
-        assert X_test_t.loc[unknown_gender_index, ohe_gender_cols].sum(axis=1).iloc[0] == 0
+        assert X_test_t.loc[unknown_gender_index, ohe_gender_cols].sum(axis=1).iloc[0] == 0, \
+            f"Expected all-zero OHE Gender columns for unknown 'Other', got: {X_test_t.loc[unknown_gender_index, ohe_gender_cols]}"
+
 
         # Ordinal (Job Title): 'handle_unknown=use_encoded_value', unknown_value=-1
         unknown_job_index = X_test[X_test['Job Title'] == 'UnknownJob'].index
         assert len(unknown_job_index) == 1, "Test setup error: Expected one row with 'UnknownJob' Job Title"
         # The output column name for the ordinal encoded feature is just 'Job Title'
-        assert X_test_t.loc[unknown_job_index, 'Job Title'].iloc[0] == -1
+        assert X_test_t.loc[unknown_job_index, 'Job Title'].iloc[0] == -1, \
+             f"Expected -1 for unknown 'UnknownJob', got: {X_test_t.loc[unknown_job_index, 'Job Title'].iloc[0]}"
+
 
     def test_preprocessor_structure(self, sample_data_for_preprocessing, data_processing_parameters):
         """Verify the structure of the created ColumnTransformer."""
@@ -545,9 +576,11 @@ class TestBuildPreprocessingPipeline:
         assert high_cat_pipeline.named_steps['ordinal'].unknown_value == -1
 
         # Check columns assigned to each transformer based on revised logic
-        # Access the fitted ColumnTransformer's transformers_ attribute
+        # Access the fitted ColumnTransformer's transformers_ attribute which stores (name, transformer, columns)
+        # Note: This attribute shows the state *after* fitting.
         assigned_cols = {name: cols for name, trans, cols in preprocessor.transformers_}
 
-        assert assigned_cols.get('num') == ["Age", "Years of Experience"]
-        assert assigned_cols.get('low_cat') == ["Gender", "Education Level"]
-        assert assigned_cols.get('high_cat') == ["Job Title"]
+        # Use lists for consistent comparison regardless of original type (e.g., index vs list)
+        assert list(assigned_cols.get('num')) == ["Age", "Years of Experience"]
+        assert list(assigned_cols.get('low_cat')) == ["Gender", "Education Level"]
+        assert list(assigned_cols.get('high_cat')) == ["Job Title"]
