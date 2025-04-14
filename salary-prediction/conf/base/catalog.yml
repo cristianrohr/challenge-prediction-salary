@@ -64,6 +64,9 @@ X_train_selected_shap_v2:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_train_selected_shap_v2.parquet
 
+optimized_elastic_net_params:
+  type: json.JSONDataset
+  filepath: data/06_models/optimized_elastic_net_params.json
 
 # Preprocesor model
 preprocessor:
@@ -98,6 +101,11 @@ lasso_regression_model_v2:
 elastic_net_model:
   type: pickle.PickleDataset
   filepath: data/06_models/elastic_net_model.pkl
+  versioned: true
+
+elastic_net_model_optimized:
+  type: pickle.PickleDataset
+  filepath: data/06_models/elastic_net_model_optimized.pkl
   versioned: true
 
 randomforestregressor_model:
@@ -139,6 +147,10 @@ lasso_regression_model_v2_metrics:
 elastic_net_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/elastic_net_model_metrics.json
+
+elastic_net_model_optimized_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/elastic_net_model_optimized_metrics.json
 
 randomforestregressor_model_metrics:
   type: json.JSONDataset
