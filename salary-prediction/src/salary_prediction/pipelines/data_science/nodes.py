@@ -2,7 +2,7 @@ import logging
 
 import pandas as pd
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.linear_model import LinearRegression, Lasso, ElasticNet
 
 from sklearn.metrics import max_error, mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
@@ -97,6 +97,28 @@ def train_lasso_regression(X_train: ParquetDataset, y_train: ParquetDataset, par
     lasso_model.fit(X_train, y_train)
 
     return lasso_model
+
+def train_elastic_net(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> ElasticNet:
+    """Trains a Elastic Net Regression model.
+
+    Args:
+        X_train: Training features
+        y_train: Training target
+        parameters: Parameters defined in parameters.yml
+
+    Returns:
+        Trained Elastic Net Regression model.
+    """
+
+    y_train = y_train.squeeze()
+
+    elastic_net_model = ElasticNet(
+        alpha=parameters["elastic_net_params"]["alpha"],
+        l1_ratio=parameters["elastic_net_params"]["l1_ratio"],
+    )
+    elastic_net_model.fit(X_train, y_train)
+
+    return elastic_net_model
 
 
 def evaluate_model(
