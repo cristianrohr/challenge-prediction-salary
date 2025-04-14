@@ -68,6 +68,10 @@ optimized_elastic_net_params:
   type: json.JSONDataset
   filepath: data/06_models/optimized_elastic_net_params.json
 
+optimized_rf_params:
+  type: json.JSONDataset
+  filepath: data/06_models/optimized_rf_params.json
+
 # Preprocesor model
 preprocessor:
   type: pickle.PickleDataset
@@ -118,6 +122,11 @@ randomforestregressor_model_v2:
   filepath: data/06_models/randomforestregressor_model_v2.pkl
   versioned: true
 
+randomforestregressor_model_optimized:
+  type: pickle.PickleDataset
+  filepath: data/06_models/randomforestregressor_model_optimized.pkl
+  versioned: true
+
 randomforestregressor_model_with_shap:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model_with_shap.pkl
@@ -159,6 +168,10 @@ randomforestregressor_model_metrics:
 randomforestregressor_model_v2_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_v2_metrics.json
+
+randomforestregressor_model_optimized_metrics:
+  type: json.JSONDataset
+  filepath: data/07_model_output/randomforestregressor_model_optimized_metrics.json
 
 randomforestregressor_model_with_shap_metrics:
   type: json.JSONDataset

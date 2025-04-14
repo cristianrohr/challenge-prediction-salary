@@ -3,7 +3,8 @@ from kedro.pipeline import Pipeline, node, pipeline
 from .nodes import (
     evaluate_model, train_baseline_model, train_elastic_net, train_linear_regression,evaluate_model_with_cv,
     train_randomforestregressor_model, train_randomforestregressor_with_shap,
-    train_lasso_regression, train_elastic_net, optimize_elastic_net_hyperparameters)
+    train_lasso_regression, train_elastic_net, optimize_elastic_net_hyperparameters,
+    optimize_randomforest_hyperparameters)
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -116,6 +117,24 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["randomforestregressor_model_v2", "X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="randomforestregressor_model_v2_metrics",
                 name="evaluate_randomforestregressor_model_v2_node",
+            ),
+            node(
+                func=optimize_randomforest_hyperparameters,
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="optimized_rf_params",
+                name="optimize_randomforest_hyperparameters_node",
+            ),
+            node(
+                func=train_randomforestregressor_model,
+                inputs=["X_train_preprocessed_v2", "y_train", "optimized_rf_params"],
+                outputs="randomforestregressor_model_optimized",
+                name="train_randomforestregressor_model_optimized_node",
+            ),
+            node(
+                func=evaluate_model_with_cv,
+                inputs=["randomforestregressor_model_optimized", "X_train_preprocessed_v2", "y_train", "params:data_science"],
+                outputs="randomforestregressor_model_optimized_metrics",
+                name="evaluate_randomforestregressor_model_optimized_node",
             ),
             node(
                 func=train_randomforestregressor_with_shap,

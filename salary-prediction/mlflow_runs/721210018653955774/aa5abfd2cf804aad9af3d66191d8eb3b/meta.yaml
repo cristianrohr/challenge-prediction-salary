@@ -1,0 +1,15 @@
+artifact_uri: file:///home/cristian/repos/challenge-salary-prediction/salary-prediction/mlflow_runs/721210018653955774/aa5abfd2cf804aad9af3d66191d8eb3b/artifacts
+end_time: 1744664865054
+entry_point_name: ''
+experiment_id: '721210018653955774'
+lifecycle_stage: active
+run_id: aa5abfd2cf804aad9af3d66191d8eb3b
+run_name: __default__
+run_uuid: aa5abfd2cf804aad9af3d66191d8eb3b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1744664856295
+status: 3
+tags: []
+user_id: cristian

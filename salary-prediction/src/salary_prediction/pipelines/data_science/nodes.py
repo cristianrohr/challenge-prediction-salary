@@ -77,6 +77,79 @@ def train_randomforestregressor_model(X_train: ParquetDataset, y_train: ParquetD
 
     return rf_model
 
+def optimize_randomforest_hyperparameters(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> Dict:
+    """Optimizes hyperparameters for RandomForestRegressor using Optuna.
+    
+    Args:
+        X_train: Training features
+        y_train: Training target
+        parameters: Parameters defined in parameters.yml
+        
+    Returns:
+        Dictionary with optimized hyperparameters
+    """
+    import optuna
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.model_selection import cross_val_score
+    
+    y_train = y_train.squeeze()
+    
+    def objective(trial):
+        # Define the hyperparameter search space
+        n_estimators = trial.suggest_int('n_estimators', 50, 500)
+        max_depth = trial.suggest_int('max_depth', 5, 30)
+        min_samples_split = trial.suggest_int('min_samples_split', 2, 20)
+        min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 10)
+        max_features = trial.suggest_categorical('max_features', ['sqrt', 'log2', None])
+        
+        # Create and evaluate model with current hyperparameters
+        model = RandomForestRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            max_features=max_features,
+            random_state=parameters["random_state"]
+        )
+        
+        # Use cross-validation to evaluate the model
+        cv_scores = cross_val_score(
+            model, 
+            X_train, 
+            y_train, 
+            cv=parameters["cv"],
+            scoring='neg_mean_squared_error'
+        )
+        
+        # Return the mean negative MSE (Optuna minimizes the objective)
+        return cv_scores.mean()
+    
+    # Create and run the study
+    study = optuna.create_study(direction='maximize')
+    study.optimize(
+        objective, 
+        n_trials=parameters["rf_optuna"]["n_trials"],
+        timeout=parameters["rf_optuna"].get("timeout", None)
+    )
+    
+    # Get the best parameters
+    best_params = study.best_params
+    best_value = study.best_value
+    
+    logging.info(f"Best parameters: {best_params}")
+    logging.info(f"Best CV score: {best_value}")
+    
+    # Return best parameters
+    return {
+        "rf_params": {
+            "n_estimators": best_params["n_estimators"],
+            "max_depth": best_params["max_depth"],
+            "min_samples_split": best_params["min_samples_split"],
+            "min_samples_leaf": best_params["min_samples_leaf"],
+            "max_features": best_params["max_features"],
+        },
+        "random_state": parameters["random_state"]
+    }
 
 def train_lasso_regression(X_train: ParquetDataset, y_train: ParquetDataset, parameters: Dict) -> Lasso:
     """Trains a Lasso Regression model.
