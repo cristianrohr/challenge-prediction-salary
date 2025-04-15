@@ -181,7 +181,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 func=select_features_with_shap,
                 inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
-                outputs="X_train_selected_shap",
+                outputs=["X_train_selected_shap", "X_test_selected_shap"],
                 name="select_features_with_shap_node",
                 tags=["data_science", "shap", "selector"]
             ),

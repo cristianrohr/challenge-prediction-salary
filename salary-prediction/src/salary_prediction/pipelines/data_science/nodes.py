@@ -411,18 +411,23 @@ def evaluate_model_with_cv(
     }
 
 
-
-# nodes.py
-
 def select_features_with_shap(
     X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
     y_train: pd.Series,
     parameters: dict
 ) -> pd.DataFrame:
     """
     Computes SHAP values from a RandomForest model and selects features based on importance.
 
-    Returns a subset of X_train with selected features.
+    Args:
+        X_train: Training data of independent features.
+        X_test: Test data of independent features.
+        y_train: True values of the target variable.
+        parameters: Parameters defined in parameters.yml
+
+    Returns:
+        Tuple of (X_train_selected, X_test_selected) with selected features.
     """
     from sklearn.ensemble import RandomForestRegressor
     import shap
@@ -474,7 +479,7 @@ def select_features_with_shap(
     plt.savefig(os.path.join(report_dir, "shap_bar_plot.png"), bbox_inches='tight', dpi=150)
     plt.close()
 
-    return X_train[selected_features]
+    return X_train[selected_features], X_test[selected_features]
 
 def train_randomforestregressor_model_on_selected(
     X_train_selected: pd.DataFrame,

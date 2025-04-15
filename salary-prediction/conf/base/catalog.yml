@@ -112,6 +112,13 @@ X_train_selected_shap:
     layer: model_input
     description: "SHAP-selected features for training"
   
+X_test_selected_shap:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_test_selected_shap.parquet
+  metadata:
+    layer: model_input
+    description: "SHAP-selected features for testing"
+
 # ======================
 # MODEL PARAMETERS
 # ======================
