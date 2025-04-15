@@ -187,14 +187,14 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=train_randomforestregressor_model_on_selected,
-                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
+                inputs=["X_train_selected_shap", "y_train", "params:data_science"],
                 outputs="randomforestregressor_model_with_shap",
                 name="train_randomforestregressor_model_with_shap_node",
                 tags=["data_science", "rf", "shap"]
             ),
             node(
                 func=evaluate_model_with_cv,
-                inputs=["randomforestregressor_model_with_shap", "X_train_preprocessed_v2", "y_train", "params:data_science"],
+                inputs=["randomforestregressor_model_with_shap", "X_train_selected_shap", "y_train", "params:data_science"],
                 outputs="randomforestregressor_model_with_shap_metrics",
                 name="evaluate_randomforestregressor_model_with_shap_node",
                 tags=["data_science", "rf", "shap", "eval"],

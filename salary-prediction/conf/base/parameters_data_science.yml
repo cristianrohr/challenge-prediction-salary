@@ -31,6 +31,6 @@ data_science:
     timeout: 600
   feature_selection:
     method: "top_n"  # Options: "top_n", "custom", "threshold"
-    top_n: 5  # Use top X features
+    top_n: 3  # Use top X features
     custom_features: ["Age", "Years of Experience", "Job Title"]  # Used when method is "custom"
     importance_threshold: 1000  # Used when method is "threshold"
