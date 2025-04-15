@@ -2,7 +2,7 @@ from kedro.pipeline import Pipeline, node, pipeline
 
 from .nodes import (
     evaluate_model, train_baseline_model, train_elastic_net, train_linear_regression,evaluate_model_with_cv,
-    train_randomforestregressor_model, train_randomforestregressor_with_shap,
+    train_randomforestregressor_model, select_features_with_shap, train_randomforestregressor_model_on_selected,
     train_lasso_regression, train_elastic_net, optimize_elastic_net_hyperparameters,
     optimize_randomforest_hyperparameters, optimize_xgboost_hyperparameters, train_xgboost_model)
 
@@ -179,11 +179,18 @@ def create_pipeline(**kwargs) -> Pipeline:
                 tags=["data_science", "xgb", "optimized", "eval", "v1"],
             ),
             node(
-                func=train_randomforestregressor_with_shap,
+                func=select_features_with_shap,
                 inputs=["X_train_preprocessed", "y_train", "params:data_science"],
-                outputs=["randomforestregressor_model_with_shap", "X_train_selected_shap"],
+                outputs="X_train_selected_shap",
+                name="select_features_with_shap_node",
+                tags=["data_science", "shap", "selector"]
+            ),
+            node(
+                func=train_randomforestregressor_model_on_selected,
+                inputs=["X_train_selected_shap", "y_train", "params:data_science"],
+                outputs="randomforestregressor_model_with_shap",
                 name="train_randomforestregressor_model_with_shap_node",
-                tags=["data_science", "rf", "shap"],
+                tags=["data_science", "rf", "shap"]
             ),
             node(
                 func=evaluate_model_with_cv,

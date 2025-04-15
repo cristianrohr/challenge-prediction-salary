@@ -110,14 +110,7 @@ X_train_selected_shap:
   filepath: data/05_model_input/X_train_selected_shap.parquet
   metadata:
     layer: model_input
-    description: "Training features selected using SHAP values"
-  
-X_train_selected_shap_v2:
-  type: pandas.ParquetDataset
-  filepath: data/05_model_input/X_train_selected_shap_v2.parquet
-  metadata:
-    layer: model_input
-    description: "Training features selected using SHAP values (v2)"
+    description: "SHAP-selected features for training"
   
 # ======================
 # MODEL PARAMETERS
