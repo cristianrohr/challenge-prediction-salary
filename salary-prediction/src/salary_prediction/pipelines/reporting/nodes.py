@@ -6,6 +6,10 @@ from plotly.subplots import make_subplots  # Import make_subplots
 from typing import List, Dict
 import pandas as pd
 from scipy.stats import ttest_rel
+from typing import List, Dict
+import plotly.graph_objects as go
+import plotly.express as px
+
 
 def select_best_model(
     all_metrics: list[dict],  # list of all model evaluation dicts
@@ -218,23 +222,40 @@ def save_top_n_metrics(
     with open(output_path, "w") as f:
         json.dump(top_models, f, indent=4)
 
+def compare_models_statistically(
+    metrics_list: List[Dict], metric: str = "rmse"
+) -> pd.DataFrame:
+    comparisons = []
+    for i, m1 in enumerate(metrics_list):
+        for j, m2 in enumerate(metrics_list):
+            if i < j and metric + "_folds" in m1 and metric + "_folds" in m2:
+                t_stat, p_value = ttest_rel(m1[metric + "_folds"], m2[metric + "_folds"])
+                comparisons.append({
+                    "model_1": m1["model_type"],
+                    "model_2": m2["model_type"],
+                    "p_value": p_value
+                })
+    return pd.DataFrame(comparisons)
+
+def save_top_n_metrics(
+    top_models: List[Dict], output_path: str
+):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(top_models, f, indent=4)
+
 def plot_model_comparison_scatter(
     all_metrics: List[Dict], output_path: str
 ):
-    import plotly.express as px
-
     df = pd.json_normalize(all_metrics)
 
-    def extract_ci_high(val):
-        return val[1] if isinstance(val, (list, tuple)) and len(val) == 2 else None
+    def extract(val, index):
+        return val[index] if isinstance(val, (list, tuple)) and len(val) == 2 else None
 
-    def extract_ci_low(val):
-        return val[0] if isinstance(val, (list, tuple)) and len(val) == 2 else None
-
-    df["rmse_ci_high"] = df["rmse_conf_interval"].apply(extract_ci_high)
-    df["rmse_ci_low"] = df["rmse_conf_interval"].apply(extract_ci_low)
-    df["r2_ci_high"] = df["r2_score_conf_interval"].apply(extract_ci_high)
-    df["r2_ci_low"] = df["r2_score_conf_interval"].apply(extract_ci_low)
+    df["rmse_ci_high"] = df["rmse_conf_interval"].apply(lambda x: extract(x, 1))
+    df["rmse_ci_low"] = df["rmse_conf_interval"].apply(lambda x: extract(x, 0))
+    df["r2_ci_high"] = df["r2_score_conf_interval"].apply(lambda x: extract(x, 1))
+    df["r2_ci_low"] = df["r2_score_conf_interval"].apply(lambda x: extract(x, 0))
 
     df["rmse_err"] = df["rmse_ci_high"] - df["rmse"]
     df["rmse_err_minus"] = df["rmse"] - df["rmse_ci_low"]
@@ -243,7 +264,8 @@ def plot_model_comparison_scatter(
 
     fig = px.scatter(
         df,
-        x="rmse", y="r2_score",
+        x="rmse",
+        y="r2_score",
         text="model_type",
         error_x="rmse_err",
         error_x_minus="rmse_err_minus",
@@ -251,7 +273,22 @@ def plot_model_comparison_scatter(
         error_y_minus="r2_err_minus",
         title="Model Comparison (RMSE vs R²)",
         labels={"rmse": "RMSE ↓", "r2_score": "R² ↑"},
+        width=850,
+        height=650,
     )
-    fig.update_traces(textposition='top center')
+
+    fig.update_traces(
+        textposition="top right",
+        marker=dict(size=12, opacity=0.8, line=dict(width=1, color='DarkSlateGrey')),
+        selector=dict(mode="markers+text")
+    )
+
+    fig.update_layout(
+        template="plotly_white",
+        showlegend=False,
+        xaxis=dict(showgrid=True, zeroline=False),
+        yaxis=dict(showgrid=True, zeroline=False),
+    )
+
     fig.write_image(output_path)
     return fig

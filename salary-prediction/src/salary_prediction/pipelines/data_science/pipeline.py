@@ -159,42 +159,42 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             node(
                 func=optimize_xgboost_hyperparameters,
-                inputs=["X_train_preprocessed", "y_train", "params:data_science"],
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="optimized_xgb_params",
                 name="optimize_xgboost_hyperparameters_node",
                 tags=["data_science", "xgb", "optimized", "v1"],
             ),
             node(
                 func=train_xgboost_model,
-                inputs=["X_train_preprocessed", "y_train", "optimized_xgb_params"],
+                inputs=["X_train_preprocessed_v2", "y_train", "optimized_xgb_params"],
                 outputs="xgboost_model_optimized",
                 name="train_xgboost_model_optimized_node",
                 tags=["data_science", "xgb", "optimized", "v1"],
             ),
             node(
                 func=evaluate_model_with_cv,
-                inputs=["xgboost_model_optimized", "X_train_preprocessed", "y_train", "params:data_science"],
+                inputs=["xgboost_model_optimized", "X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="xgboost_model_optimized_metrics",
                 name="evaluate_xgboost_model_optimized_node",
                 tags=["data_science", "xgb", "optimized", "eval", "v1"],
             ),
             node(
                 func=select_features_with_shap,
-                inputs=["X_train_preprocessed", "y_train", "params:data_science"],
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="X_train_selected_shap",
                 name="select_features_with_shap_node",
                 tags=["data_science", "shap", "selector"]
             ),
             node(
                 func=train_randomforestregressor_model_on_selected,
-                inputs=["X_train_selected_shap", "y_train", "params:data_science"],
+                inputs=["X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="randomforestregressor_model_with_shap",
                 name="train_randomforestregressor_model_with_shap_node",
                 tags=["data_science", "rf", "shap"]
             ),
             node(
                 func=evaluate_model_with_cv,
-                inputs=["randomforestregressor_model_with_shap", "X_train_selected_shap", "y_train", "params:data_science"],
+                inputs=["randomforestregressor_model_with_shap", "X_train_preprocessed_v2", "y_train", "params:data_science"],
                 outputs="randomforestregressor_model_with_shap_metrics",
                 name="evaluate_randomforestregressor_model_with_shap_node",
                 tags=["data_science", "rf", "shap", "eval"],
