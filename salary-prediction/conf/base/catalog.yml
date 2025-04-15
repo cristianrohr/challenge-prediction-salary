@@ -1,201 +1,381 @@
-# Here you can define all your data sets by using simple YAML syntax.
-#
-# Documentation for this file format can be found in "The Data Catalog"
-# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
-#
+# DATA CATALOG
+# Organized by data processing stages
 
+# ======================
+# RAW DATA SOURCES
+# ======================
 salary_raw:
   type: pandas.CSVDataset
   filepath: data/01_raw/salary.csv
+  metadata:
+    layer: raw
+    description: "Raw salary data containing compensation information"
 
 people_raw:
   type: pandas.CSVDataset
   filepath: data/01_raw/people.csv
+  metadata:
+    layer: raw
+    description: "Raw people data containing personal information"
 
 descriptions_raw:
   type: pandas.CSVDataset
   filepath: data/01_raw/descriptions.csv
+  metadata:
+    layer: raw
+    description: "Raw job description data"
 
+# ======================
+# INTERMEDIATE DATA
+# ======================
 merged_data:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/merged_data.parquet
-
+  metadata:
+    layer: intermediate
+    description: "Combined dataset of salary and people"
+  
 cleaned_data:
   type: pandas.ParquetDataset
   filepath: data/02_intermediate/cleaned_data.parquet
-
+  metadata:
+    layer: intermediate
+    description: "Cleaned and preprocessed dataset ready for model training"
+  
+# ======================
+# MODEL INPUTS
+# ======================
+# Training and test splits
 X_train:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_train.parquet
-
+  metadata:
+    layer: model_input
+    description: "Features training set"
+  
 X_test:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_test.parquet
-
+  metadata:
+    layer: model_input
+    description: "Features test set"
+  
 y_train:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/y_train.parquet
-
+  metadata:
+    layer: model_input
+    description: "Target training set"
+  
 y_test:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/y_test.parquet
-
+  metadata:
+    layer: model_input
+    description: "Target test set"
+  
+# Preprocessed data - version 1
 X_train_preprocessed:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_train_preprocessed.parquet
-
+  metadata:
+    layer: model_input
+    description: "Preprocessed features for training (pipeline v1)"
+  
 X_test_preprocessed:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_test_preprocessed.parquet
-
-X_train_selected_shap:
-  type: pandas.ParquetDataset
-  filepath: data/05_model_input/X_train_selected_shap.parquet
-
+  metadata:
+    layer: model_input
+    description: "Preprocessed features for testing (pipeline v1)"
+  
+# Preprocessed data - version 2
 X_train_preprocessed_v2:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_train_preprocessed_v2.parquet
-
+  metadata:
+    layer: model_input
+    description: "Preprocessed features for training (pipeline v2)"
+  
 X_test_preprocessed_v2:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_test_preprocessed_v2.parquet
-
+  metadata:
+    layer: model_input
+    description: "Preprocessed features for testing (pipeline v2)"
+  
+# SHAP feature selection datasets
+X_train_selected_shap:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_train_selected_shap.parquet
+  metadata:
+    layer: model_input
+    description: "Training features selected using SHAP values"
+  
 X_train_selected_shap_v2:
   type: pandas.ParquetDataset
   filepath: data/05_model_input/X_train_selected_shap_v2.parquet
-
+  metadata:
+    layer: model_input
+    description: "Training features selected using SHAP values (v2)"
+  
+# ======================
+# MODEL PARAMETERS
+# ======================
 optimized_elastic_net_params:
   type: json.JSONDataset
   filepath: data/06_models/optimized_elastic_net_params.json
-
+  metadata:
+    layer: model_params
+    description: "Optimized hyperparameters for Elastic Net model"
+  
 optimized_rf_params:
   type: json.JSONDataset
   filepath: data/06_models/optimized_rf_params.json
-
+  metadata:
+    layer: model_params
+    description: "Optimized hyperparameters for Random Forest model"
+  
 optimized_xgb_params:
   type: json.JSONDataset
   filepath: data/06_models/optimized_xgb_params.json
-
-# Preprocesor model
+  metadata:
+    layer: model_params
+    description: "Optimized hyperparameters for XGBoost model"
+  
+# ======================
+# PREPROCESSORS
+# ======================
 preprocessor:
   type: pickle.PickleDataset
   filepath: data/06_models/preprocessor.pkl
-
+  metadata:
+    layer: model
+    description: "Scikit-learn preprocessing pipeline (v1)"
+  
 preprocessor_v2:
   type: pickle.PickleDataset
   filepath: data/06_models/preprocessor_v2.pkl
-
-# Models
+  metadata:
+    layer: model
+    description: "Scikit-learn preprocessing pipeline (v2)"
+  
+# ======================
+# MODELS
+# ======================
+# Baseline models
 baseline_model:
   type: pickle.PickleDataset
   filepath: data/06_models/baseline_model.pkl
+  metadata:
+    layer: model
+    description: "Baseline regression model"
   versioned: true
 
+# Linear models
 linear_regression_model:
   type: pickle.PickleDataset
   filepath: data/06_models/linear_regression_model.pkl
+  metadata:
+    layer: model
+    description: "Linear regression model"
   versioned: true
 
 lasso_regression_model:
   type: pickle.PickleDataset
   filepath: data/06_models/lasso_regression_model.pkl
+  metadata:
+    layer: model
+    description: "Lasso regression model (pipeline v1)"
   versioned: true
 
 lasso_regression_model_v2:
   type: pickle.PickleDataset
   filepath: data/06_models/lasso_regression_model_v2.pkl
+  metadata:
+    layer: model
+    description: "Lasso regression model (pipeline v2)"
   versioned: true
 
 elastic_net_model:
   type: pickle.PickleDataset
   filepath: data/06_models/elastic_net_model.pkl
+  metadata:
+    layer: model
+    description: "Elastic Net regression model"
   versioned: true
 
 elastic_net_model_optimized:
   type: pickle.PickleDataset
   filepath: data/06_models/elastic_net_model_optimized.pkl
+  metadata:
+    layer: model
+    description: "Optimized Elastic Net regression model"
   versioned: true
 
+# Tree-based models
 randomforestregressor_model:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model.pkl
+  metadata:
+    layer: model
+    description: "Random Forest regression model (pipeline v1)"
   versioned: true
 
 randomforestregressor_model_v2:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model_v2.pkl
+  metadata:
+    layer: model
+    description: "Random Forest regression model (pipeline v2)"
   versioned: true
 
 randomforestregressor_model_optimized:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model_optimized.pkl
+  metadata:
+    layer: model
+    description: "Optimized Random Forest regression model"
   versioned: true
 
 randomforestregressor_model_with_shap:
   type: pickle.PickleDataset
   filepath: data/06_models/randomforestregressor_model_with_shap.pkl
+  metadata:
+    layer: model
+    description: "Random Forest model with SHAP feature selection"
   versioned: true
 
+# Boosting models
 xgboost_model_optimized:
   type: pickle.PickleDataset
   filepath: data/06_models/xgboost_model_optimized.pkl
+  metadata:
+    layer: model
+    description: "Optimized XGBoost regression model"
   versioned: true
 
-# Metrics
+# ======================
+# MODEL METRICS
+# ======================
 baseline_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/baseline_model_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Performance metrics for baseline model"
+  
 baseline_model_ci_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/baseline_model_ci_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for baseline model"
+  
 linear_regression_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/linear_regression_model_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for linear regression model"
+  
 lasso_regression_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/lasso_regression_model_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for lasso model (v1)"
+  
 lasso_regression_model_v2_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/lasso_regression_model_v2_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for lasso model (v2)"
+  
 elastic_net_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/elastic_net_model_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for elastic net model"
+  
 elastic_net_model_optimized_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/elastic_net_model_optimized_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for optimized elastic net model"
+  
 randomforestregressor_model_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for random forest model (v1)"
+  
 randomforestregressor_model_v2_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_v2_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for random forest model (v2)"
+  
 randomforestregressor_model_optimized_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_optimized_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for optimized random forest model"
+  
 xgboost_model_optimized_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/xgboost_model_optimized_metrics.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for optimized XGBoost model"
+  
 randomforestregressor_model_with_shap_metrics:
   type: json.JSONDataset
   filepath: data/07_model_output/randomforestregressor_model_metrics_with_shap.json
-
+  metadata:
+    layer: model_output
+    description: "Cross-validation metrics for random forest model with SHAP"
+  
+# ======================
+# REPORTING OUTPUTS
+# ======================
 best_model_result:
   type: json.JSONDataset
   filepath: data/08_reporting/best_model_result.json
-
+  metadata:
+    layer: reporting
+    description: "Best model selection results"
+  
 sorted_model_metrics:
   type: pandas.CSVDataset
   filepath: data/08_reporting/sorted_model_metrics.csv
-
-
+  metadata:
+    layer: reporting
+    description: "Sorted comparison of all model metrics"
+  
+model_feature_importance:
+  type: matplotlib.MatplotlibWriter
+  filepath: data/08_reporting/feature_importance.png
+  metadata:
+    layer: reporting
+    description: "Feature importance visualization for the best model"
+  
+model_comparison_report:
+  type: pandas.ExcelDataset
+  filepath: data/08_reporting/model_comparison_report.xlsx
+  metadata:
+    layer: reporting
+    description: "Detailed comparison of all models with metrics and parameters"
+  
+model_performance_plots:
+  type: json.JSONDataset
+  filepath: data/08_reporting/model_performance_plots.json
+  metadata:
+    layer: reporting
+    description: "Visualization data for model performance plots"
