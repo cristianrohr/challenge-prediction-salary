@@ -44,6 +44,19 @@ def register_pipelines() -> Dict[str, Pipeline]:
     pipelines["ds_v1"] = ds_pipeline.only_nodes_with_tags("uses_pp_v1")
     pipelines["ds_v2"] = ds_pipeline.only_nodes_with_tags("uses_pp_v2")
 
+    # Combine all preprocessing steps under this name
+    pipelines["data_processing"] = (
+        common_pp_pipeline + pp_v1_pipeline + pp_v2_pipeline
+    )
+
+    # Specific Data Science pipelines
+    pipelines["ds_full"] = ds_pipeline_full_object # All DS nodes
+    pipelines["ds_v1"] = ds_pipeline_full_object.only_nodes_with_tags("uses_pp_v1")
+    pipelines["ds_v2"] = ds_pipeline_full_object.only_nodes_with_tags("uses_pp_v2")
+
+    # Assign the full data science pipeline object to this name
+    pipelines["data_science"] = ds_pipeline_full_object
+
     # Reporting pipeline
     pipelines["reporting"] = reporting_pipeline
 
