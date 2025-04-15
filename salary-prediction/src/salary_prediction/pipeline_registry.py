@@ -1,19 +1,20 @@
-"""Project pipelines."""
+# src/your_project_name/pipeline_registry.py
 
+"""Project pipelines."""
 from typing import Dict
 
-from kedro.framework.project import find_pipelines
-from kedro.pipeline import Pipeline
+from kedro.pipeline import Pipeline, pipeline # Ensure pipeline is imported if used for combining
 
 # Import individual pipeline creation functions
 from .pipelines.data_processing.pipeline import (
-    create_pipeline as create_dp_pipeline,
     create_common_preprocessing_pipeline,
     create_preprocessing_v1_pipeline,
     create_preprocessing_v2_pipeline,
 )
+# Assuming create_ds_pipeline creates the *full* ds pipeline object
 from .pipelines.data_science.pipeline import create_pipeline as create_ds_pipeline
 from .pipelines.reporting.pipeline import create_pipeline as create_reporting_pipeline
+
 
 def register_pipelines() -> Dict[str, Pipeline]:
     """Register the project's pipelines.
@@ -25,24 +26,17 @@ def register_pipelines() -> Dict[str, Pipeline]:
     common_pp_pipeline = create_common_preprocessing_pipeline()
     pp_v1_pipeline = create_preprocessing_v1_pipeline()
     pp_v2_pipeline = create_preprocessing_v2_pipeline()
-    ds_pipeline = create_ds_pipeline()
-    reporting_pipeline = create_reporting_pipeline()
+    # This holds the full pipeline object with all ds nodes/tags
+    ds_pipeline_full_object = create_ds_pipeline()
+    reporting_pipeline_object = create_reporting_pipeline()
 
     # --- Define Named Pipelines for Specific Runs ---
+    pipelines = {} # Initialize the dictionary
 
-    # Preprocessing pipelines
-    pipelines = {
-        "pp_common": common_pp_pipeline,
-        "pp_v1": pp_v1_pipeline,
-        "pp_v2": pp_v2_pipeline,
-    }
-
-    # Data science pipelines (potentially filtered)
-    # Full DS pipeline (contains nodes tagged for v1 and v2)
-    pipelines["ds_full"] = ds_pipeline
-    # Filtered DS pipelines
-    pipelines["ds_v1"] = ds_pipeline.only_nodes_with_tags("uses_pp_v1")
-    pipelines["ds_v2"] = ds_pipeline.only_nodes_with_tags("uses_pp_v2")
+    # Specific Preprocessing pipelines
+    pipelines["pp_common"] = common_pp_pipeline
+    pipelines["pp_v1"] = pp_v1_pipeline
+    pipelines["pp_v2"] = pp_v2_pipeline
 
     # Combine all preprocessing steps under this name
     pipelines["data_processing"] = (
@@ -58,33 +52,26 @@ def register_pipelines() -> Dict[str, Pipeline]:
     pipelines["data_science"] = ds_pipeline_full_object
 
     # Reporting pipeline
-    pipelines["reporting"] = reporting_pipeline
+    pipelines["reporting"] = reporting_pipeline_object
 
     # --- Define Composite Pipelines for End-to-End Runs ---
-
-    # Run only V1 preprocessing and corresponding DS models
-    pipelines["full_v1"] = (
-        common_pp_pipeline
-        + pp_v1_pipeline
-        + pipelines["ds_v1"] # Use the filtered v1 DS pipeline
-        + reporting_pipeline # Reporting will process available metrics
+    pipelines["full_v1"] = pipeline( # Use pipeline() to combine if needed
+        pipelines["data_processing"].only_nodes_with_tags("pp_common", "pp_v1") # Run common + v1 pp
+        + pipelines["ds_v1"] # Run v1 ds nodes
+        + pipelines["reporting"]
     )
 
-    # Run only V2 preprocessing and corresponding DS models
     pipelines["full_v2"] = (
-        common_pp_pipeline
-        + pp_v2_pipeline
-        + pipelines["ds_v2"] # Use the filtered v2 DS pipeline
-        + reporting_pipeline # Reporting will process available metrics
+         common_pp_pipeline
+         + pp_v2_pipeline
+         + pipelines["ds_v2"] # Use the filtered v2 DS pipeline
+         + pipelines["reporting"]
     )
 
-    # Run common steps, both preprocessing versions, and all DS models
     pipelines["full_both"] = (
-        common_pp_pipeline
-        + pp_v1_pipeline
-        + pp_v2_pipeline
-        + pipelines["ds_full"] # Use the full DS pipeline
-        + reporting_pipeline # Reporting will process all metrics
+        pipelines["data_processing"] # Use the combined DP pipeline
+        + pipelines["data_science"]  # Use the combined DS pipeline
+        + pipelines["reporting"]
     )
 
     # --- Define the Default Pipeline ---
