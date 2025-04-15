@@ -13,3 +13,5 @@ data_processing:
     - "Master's"
     - "PhD"
   job_title_column: Job Title
+  include_age_experience_interaction: False
+  include_education_experience_interaction: False

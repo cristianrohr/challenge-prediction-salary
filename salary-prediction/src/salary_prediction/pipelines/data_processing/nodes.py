@@ -194,29 +194,88 @@ def build_preprocessing_pipeline_v2(X_train: pd.DataFrame, X_test: pd.DataFrame,
     """
     Builds a preprocessing pipeline and applies it to training and test sets,
     handling job titles with custom grouping approach (excluding original job title).
+
+    Args:
+        X_train: Training features.
+        X_test: Testing features.
+        parameters: Parameters defined in parameters/data_processing.yml.
+    Returns:
+        Transformed X_train, X_test and the fitted preprocessor pipeline.
     """
     ordinal_col_name = parameters.get("ordinal_column", "Education Level")
     education_order = parameters.get("education_level_order", ["Bachelor's", "Master's", "PhD"])
     cardinality_threshold = parameters.get("cardinality_threshold", 10)
     job_title_column = parameters.get("job_title_column", "Job Title")
+    
+    # Parameters for interaction features
+    age_column = parameters.get("age_column", "Age")
+    experience_column = parameters.get("experience_column", "Years of Experience")
+    
+    # New parameters to control interaction features
+    include_age_experience_interaction = parameters.get("include_age_experience_interaction", False)
+    include_education_experience_interaction = parameters.get("include_education_experience_interaction", False)
 
     log.info(f"Using '{ordinal_col_name}' as the ordinal column with order: {education_order}")
     log.info(f"Using cardinality threshold: {cardinality_threshold}")
     log.info(f"Using '{job_title_column}' for hierarchical grouping (original column will be removed)")
+    
+    # Log interaction feature settings
+    log.info(f"Age×Experience interaction: {'Enabled' if include_age_experience_interaction else 'Disabled'}")
+    log.info(f"Education×Experience interaction: {'Enabled' if include_education_experience_interaction else 'Disabled'}")
 
+    # Create a copy of the data to avoid modifying the original
+    X_train = X_train.copy()
+    X_test = X_test.copy()
+    
     # Apply job title grouping transformation first
     if job_title_column in X_train.columns:
         log.info(f"Applying hierarchical grouping to job titles")
-        X_train = X_train.copy()
-        X_test = X_test.copy()
         
         # Create new feature with grouped job titles
         X_train['JobTitleGroup'] = X_train[job_title_column].apply(group_job_titles)
         X_test['JobTitleGroup'] = X_test[job_title_column].apply(group_job_titles)
-        
     else:
         log.warning(f"Job title column '{job_title_column}' not found in data")
 
+    # Create interaction features if enabled
+    # 1. Age × Experience interaction
+    if include_age_experience_interaction:
+        if age_column in X_train.columns and experience_column in X_train.columns:
+            log.info(f"Creating {age_column}×{experience_column} interaction feature")
+            X_train[f'{age_column}_x_{experience_column}'] = X_train[age_column] * X_train[experience_column]
+            X_test[f'{age_column}_x_{experience_column}'] = X_test[age_column] * X_test[experience_column]
+        else:
+            log.warning(f"Could not create Age×Experience interaction: columns {age_column} or {experience_column} not found")
+    
+    # 2. Education × Experience interaction
+    if include_education_experience_interaction:
+        if ordinal_col_name in X_train.columns and experience_column in X_train.columns:
+            log.info(f"Creating {ordinal_col_name}×{experience_column} interaction feature")
+            
+            # Create a temporary mapping for education levels
+            edu_mapping = {level: i for i, level in enumerate(education_order)}
+            
+            # Apply mapping and handle unknown values with -1
+            def map_education(edu):
+                if pd.isna(edu) or edu not in edu_mapping:
+                    return -1
+                return edu_mapping[edu]
+            
+            # Create temporary numeric education column
+            X_train['_temp_edu_numeric'] = X_train[ordinal_col_name].apply(map_education)
+            X_test['_temp_edu_numeric'] = X_test[ordinal_col_name].apply(map_education)
+            
+            # Create the interaction feature
+            X_train[f'Education_x_{experience_column}'] = X_train['_temp_edu_numeric'] * X_train[experience_column]
+            X_test[f'Education_x_{experience_column}'] = X_test['_temp_edu_numeric'] * X_test[experience_column]
+            
+            # Drop temporary column
+            X_train.drop('_temp_edu_numeric', axis=1, inplace=True)
+            X_test.drop('_temp_edu_numeric', axis=1, inplace=True)
+        else:
+            log.warning(f"Could not create Education×Experience interaction: columns {ordinal_col_name} or {experience_column} not found")
+
+    # Identify numeric and categorical columns
     numerical_cols = X_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
     all_categorical_cols = X_train.select_dtypes(include=["object", "category"]).columns.tolist()
 
@@ -286,7 +345,6 @@ def build_preprocessing_pipeline_v2(X_train: pd.DataFrame, X_test: pd.DataFrame,
         transformers.append(("edu_ordinal", edu_ordinal_pipeline, explicit_ordinal_cols))
     if job_title_group_cols:  # Add the grouped job titles transformer
         transformers.append(("job_group", job_group_pipeline, job_title_group_cols))
-    # Removed the job_title_cols transformer
     if low_cardinality_cols:
         transformers.append(("low_cat_ohe", low_card_pipeline, low_cardinality_cols))
     if high_cardinality_cols:
@@ -317,7 +375,7 @@ def build_preprocessing_pipeline_v2(X_train: pd.DataFrame, X_test: pd.DataFrame,
              if name == 'remainder': continue
              if trans == 'drop': continue
 
-             if name in ['num', 'edu_ordinal']:  # Removed 'job_title_orig'
+             if name in ['num', 'edu_ordinal']:
                  feature_names.extend(cols)
              elif name in ['job_group', 'low_cat_ohe']:
                  ohe = trans.named_steps['onehot']
