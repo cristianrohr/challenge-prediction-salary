@@ -1,3 +1,7 @@
+# Control which preprocessing pipeline version(s) to execute
+# Options: "v1", "v2", "both"
+preprocessing_version_to_run: "v2" # Default value
+
 data_processing:
   target_variable: "Salary"
   random_state: 42
