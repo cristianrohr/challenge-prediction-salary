@@ -5,6 +5,7 @@ import numpy as np
 from plotly.subplots import make_subplots  # Import make_subplots
 from typing import List, Dict
 import pandas as pd
+from scipy.stats import ttest_rel
 
 def select_best_model(
     all_metrics: list[dict],  # list of all model evaluation dicts
@@ -166,3 +167,91 @@ def plot_metrics(metrics: dict, output_filepath: str):
     fig.write_image(output_filepath)  # Save as PNG
     return fig
 
+def select_best_model_by_multiple_metrics(
+    all_metrics: List[Dict], 
+    metrics: List[str],
+    ascending_flags: List[bool]
+) -> Dict:
+    df = pd.DataFrame(all_metrics)
+    for metric, ascending in zip(metrics, ascending_flags):
+        df[f"{metric}_rank"] = df[metric].rank(ascending=ascending)
+    df["avg_rank"] = df[[f"{m}_rank" for m in metrics]].mean(axis=1)
+    best_idx = df["avg_rank"].idxmin()
+    best_model = df.iloc[best_idx].to_dict()
+    return {
+        "best_model_name": best_model["model_type"],
+        "best_model_metrics": best_model
+    }
+
+def get_top_n_models(
+    all_metrics: List[Dict], sort_by: str, top_n: int = 3, ascending: bool = True
+) -> List[Dict]:
+    return sorted(all_metrics, key=lambda m: m[sort_by], reverse=not ascending)[:top_n]
+
+def reject_models_with_wide_ci(
+    all_metrics: List[Dict], max_ci_width: float = 10000
+) -> List[Dict]:
+    return [
+        m for m in all_metrics
+        if (m["rmse_conf_interval"][1] - m["rmse_conf_interval"][0]) < max_ci_width
+    ]
+
+def compare_models_statistically(
+    metrics_list: List[Dict], metric: str = "rmse"
+) -> pd.DataFrame:
+    comparisons = []
+    for i, m1 in enumerate(metrics_list):
+        for j, m2 in enumerate(metrics_list):
+            if i < j and metric + "_folds" in m1 and metric + "_folds" in m2:
+                t_stat, p_value = ttest_rel(m1[metric + "_folds"], m2[metric + "_folds"])
+                comparisons.append({
+                    "model_1": m1["model_type"],
+                    "model_2": m2["model_type"],
+                    "p_value": p_value
+                })
+    return pd.DataFrame(comparisons)
+
+def save_top_n_metrics(
+    top_models: List[Dict], output_path: str
+):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(top_models, f, indent=4)
+
+def plot_model_comparison_scatter(
+    all_metrics: List[Dict], output_path: str
+):
+    import plotly.express as px
+
+    df = pd.json_normalize(all_metrics)
+
+    def extract_ci_high(val):
+        return val[1] if isinstance(val, (list, tuple)) and len(val) == 2 else None
+
+    def extract_ci_low(val):
+        return val[0] if isinstance(val, (list, tuple)) and len(val) == 2 else None
+
+    df["rmse_ci_high"] = df["rmse_conf_interval"].apply(extract_ci_high)
+    df["rmse_ci_low"] = df["rmse_conf_interval"].apply(extract_ci_low)
+    df["r2_ci_high"] = df["r2_score_conf_interval"].apply(extract_ci_high)
+    df["r2_ci_low"] = df["r2_score_conf_interval"].apply(extract_ci_low)
+
+    df["rmse_err"] = df["rmse_ci_high"] - df["rmse"]
+    df["rmse_err_minus"] = df["rmse"] - df["rmse_ci_low"]
+    df["r2_err"] = df["r2_ci_high"] - df["r2_score"]
+    df["r2_err_minus"] = df["r2_score"] - df["r2_ci_low"]
+
+    fig = px.scatter(
+        df,
+        x="rmse", y="r2_score",
+        text="model_type",
+        error_x="rmse_err",
+        error_x_minus="rmse_err_minus",
+        error_y="r2_err",
+        error_y_minus="r2_err_minus",
+        title="Model Comparison (RMSE vs R²)",
+        labels={"rmse": "RMSE ↓", "r2_score": "R² ↑"},
+    )
+    fig.update_traces(textposition='top center')
+    fig.write_image(output_path)
+    return fig

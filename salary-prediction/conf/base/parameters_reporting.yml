@@ -5,3 +5,8 @@ reporting:
   full_metrics_report_path: data/08_reporting/model_comparison.json
   selection_metric: rmse
   selection_ascending: true
+  metrics_list: ["rmse", "r2_score"]
+  ascending_flags: [true, false]
+  top_n: 3
+  top_n_metrics_path: data/08_reporting/top_n_model_metrics.json
+  scatter_plot_path: data/08_reporting/model_scatter_plot.png

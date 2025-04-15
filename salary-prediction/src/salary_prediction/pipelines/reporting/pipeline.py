@@ -1,7 +1,8 @@
 from kedro.pipeline import Pipeline, node, pipeline
 
 from .nodes import (
-    plot_metrics, select_best_model, generate_comparison_report, load_all_metrics_from_folder, generate_sorted_metrics_csv
+    plot_metrics, load_all_metrics_from_folder, generate_comparison_report, generate_sorted_metrics_csv,
+    select_best_model_by_multiple_metrics, get_top_n_models, save_top_n_metrics, plot_model_comparison_scatter
 )
 
 
@@ -23,22 +24,36 @@ def create_pipeline(**kwargs) -> Pipeline:
                 name="load_all_metrics_node",
             ),
             node(
-                func=select_best_model,
-                inputs=["all_model_metrics", "params:reporting.selection_metric", "params:reporting.selection_ascending"],
-                outputs="best_model_result",
-                name="select_best_model_node",
+            func=select_best_model_by_multiple_metrics,
+            inputs=[
+                "all_model_metrics",
+                "params:reporting.metrics_list",
+                "params:reporting.ascending_flags"
+            ],
+            outputs="best_model_result",
+            name="select_best_model_by_multiple_metrics_node",
             ),
             node(
-                func=generate_comparison_report,
-                inputs=["all_model_metrics", "params:reporting.full_metrics_report_path"],
+                func=get_top_n_models,
+                inputs=[
+                    "all_model_metrics",
+                    "params:reporting.selection_metric",
+                    "params:reporting.top_n"
+                ],
+                outputs="top_models",
+                name="get_top_n_models_node",
+            ),
+            node(
+                func=save_top_n_metrics,
+                inputs=["top_models", "params:reporting.top_n_metrics_path"],
                 outputs=None,
-                name="generate_model_comparison_report_node",
+                name="save_top_n_metrics_node",
             ),
             node(
-                func=generate_sorted_metrics_csv,
-                inputs=["all_model_metrics", "params:reporting.selection_metric", "params:reporting.selection_ascending"],
-                outputs="sorted_model_metrics",
-                name="generate_sorted_metrics_csv_node"
-            )
+                func=plot_model_comparison_scatter,
+                inputs=["all_model_metrics", "params:reporting.scatter_plot_path"],
+                outputs=None,
+                name="plot_model_comparison_scatter_node",
+        )
         ]
     )
