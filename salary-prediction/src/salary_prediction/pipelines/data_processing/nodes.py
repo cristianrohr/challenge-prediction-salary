@@ -13,14 +13,13 @@ os.environ["PYTHONHASHSEED"] = "42"
 log = logging.getLogger(__name__)
 
 
-def merge_datasets(salary_df: pd.DataFrame, people_df: pd.DataFrame, descriptions_df: pd.DataFrame):
+def merge_datasets(salary_df: pd.DataFrame, people_df: pd.DataFrame):
     """
     Merges the datasets into a single one.
 
     Args:
         salary_df: Dataframe with the target variable.
         people_df: Dataframe with the features.
-        descriptions_df: Dataframe with the descriptions.
     Returns:
         Merged dataset.
     """

@@ -8,7 +8,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
             node(
                 func=merge_datasets,
-                inputs=["salary_raw", "people_raw", "descriptions_raw"],
+                inputs=["salary_raw", "people_raw"],
                 outputs="merged_data",
                 name="merge_datasets_node",
                 tags=["data_processing", "merge"],
