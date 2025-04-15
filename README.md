@@ -33,13 +33,22 @@ The challenge have some mandatory features:
 The dataset contains three files:
 - `salary.csv`: Contains the target variable (Salary)
 - `people.csv`: Contains features about individuals
-- `descriptions.csv`: Contains textual descriptions
+- `descriptions.csv`: Contains textual descriptions ( NOT USED!!)
 
 Dataset involves both numerical and categorical variables
 
 ## Project Structure
 
 Kedro was used to structure the code.
+
+The project have three different pipelines
+
+- data_processing: responsible for loading and preprocessing the data
+  - pp_common: common preprocessing steps
+  - pp_v1: preprocessing steps for version 1
+  - pp_v2: preprocessing steps for version 2 ( a more advanced version of the preprocessing )
+- data_science: responsible for training the model
+- reporting: responsible for reporting the results
 
 ## Installation & Setup
 
@@ -55,6 +64,24 @@ Kedro was used to structure the code.
 `jupyter notebook notebooks/01_EDA.ipynb`
 6. Run the Kedro pipeline
 `kedro run`
+
+Run V1 Only:
+Set preprocessing_version_to_run: "v1" in parameters_data_processing.yml (optional, for documentation/clarity).
+
+Execute: `kedro run --pipeline=full_v1`
+This runs pp_common, pp_v1, then only the data science nodes tagged uses_pp_v1, and finally reporting.
+
+Run V2 Only:
+Set preprocessing_version_to_run: "v2" in parameters_data_processing.yml (optional).
+Execute: `kedro run --pipeline=full_v2`
+This runs pp_common, pp_v2, then only the data science nodes tagged uses_pp_v2, and finally reporting.
+
+Run Both (Default Behavior):
+Set preprocessing_version_to_run: "both" in parameters_data_processing.yml.
+Execute: `kedro run` (runs __default__, which we mapped to full_both)
+Or explicitly: `kedro run --pipeline=full_both`
+
+This runs pp_common, pp_v1, pp_v2, all data science nodes (ds_full), and finally reporting.
 
 ## Methodology
 
