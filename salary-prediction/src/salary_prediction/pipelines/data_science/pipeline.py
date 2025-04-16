@@ -199,5 +199,15 @@ def create_pipeline(**kwargs) -> Pipeline:
                 name="evaluate_randomforestregressor_model_with_shap_node",
                 tags=["data_science", "rf", "shap", "eval", "uses_pp_v2"],
             ),
+            node(
+                func=evaluate_model,
+                inputs=["xgboost_model_optimized", "X_test_preprocessed_v2", "y_test"],
+                outputs="best_model_metrics_on_test",
+                name="evaluate_best_model_on_test_node",
+                tags=["data_science", "xgb", "optimized", "eval", "uses_pp_v2", "best_model"],
+            ),
         ]
     )
+
+
+## Add final model test here, this is not elegant, but i'm running out of time for the deadline

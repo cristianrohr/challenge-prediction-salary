@@ -386,3 +386,10 @@ detailed_metrics_df:
   metadata:
     layer: reporting
     description: "Detailed metrics for all models"
+
+best_model_metrics_on_test:
+  type: json.JSONDataset
+  filepath: data/08_reporting/best_model_metrics_on_test.json
+  metadata:
+    layer: reporting
+    description: "Metrics for the best model on test data"
