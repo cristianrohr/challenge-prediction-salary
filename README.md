@@ -100,3 +100,6 @@ After cross-validation and model selection, the final evaluation was performed o
 ## Full Report
 - The complete modeling report is available in `salary_prediction/notebooks/02_Model_Report.ipynb`
 - The EDA report is available in `salary_prediction/notebooks/01_EDA.ipynb`
+
+
+**This was tested on Linux Mint 22 Wilma**
