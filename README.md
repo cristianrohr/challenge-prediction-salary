@@ -93,13 +93,8 @@ Or explicitly: `kedro run --pipeline=full_both`
 This runs pp_common, pp_v1, pp_v2, all data science nodes (ds_full), and finally reporting.
 
 ## Results
-Model | RMSE | R² Score | 95% RMSE CI | Notes
-Baseline (Dummy) | 49,022 | -0.00 | [44,125, 52,191] | Simple mean-based model
-Linear Regression | 15,551 | 0.89 | [12,962, 18,138] | Strong linear baseline
-Lasso Regression | 15,549 | 0.89 | [12,959, 18,137] | Sparse feature selection
-Random Forest | 15,369 | 0.89 | [14,063, 16,673] | Best balance accuracy/stability
-RF + SHAP Selection | 15,614 | 0.89 | [14,322, 16,905] | Similar performance, more compact
-Best Model (XGBoost) | 14,468 | 0.91 | - | Selected as final model
+After cross-validation and model selection, the final evaluation was performed on the held-out test set using the best model: XGBRegressor, trained with pp_v2 preprocessing and tuned via Optuna. The model achieved a Root Mean Squared Error (RMSE) of 14,468, a Mean Squared Error (MSE) of ~2.09×10⁸, and an R² score of 0.913 on the test data. 
 
 ## Full Report
-The complete modeling report is available in `notebooks/02_Model_Report.ipynb`
+- The complete modeling report is available in `salary_prediction/notebooks/02_Model_Report.ipynb`
+- The EDA report is available in `salary_prediction/notebooks/01_EDA.ipynb`
