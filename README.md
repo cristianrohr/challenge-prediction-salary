@@ -2,7 +2,21 @@
 
 ## Overview
 
-This project develops a machine learning model to predict salaries based on features such as age, gender, education level, job title, years of experience, and job descriptions. This is a regression task.
+This project was built as a technical machine learning challenge to predict individual salaries based on structured data, applying best practices in reproducible data science using the Kedro framework.
+
+We developed a fully modular and documented ML pipeline that includes:
+- Data ingestion and preprocessing with two alternative versions to compare feature engineering strategies.
+- Model training and evaluation, ranging from simple baselines to advanced tree-based regressors.
+- Confidence interval estimation to assess the statistical reliability of the predictions.
+- Feature importance analysis using SHAP to enhance model interpretability.
+
+Dataset Overview
+- The dataset includes:
+- Demographics (age, gender, education)
+- Professional features (job title, years of experience)
+- Text descriptions (excluded in this implementation)
+
+The goal is to predict salary (regression task) using only structured features.
 
 ### Mandatory Features:
 
@@ -20,13 +34,6 @@ The challenge have some mandatory features:
   - Have no big blocks of code, instead it should import the functionality from the modules and only have initial configuration.
   - Include illustrations or images showing the results.
 
-#### Optional Features ( just the ones we have implemented):
-- Validate the model using cross-validation techniques. (3)
-- Visualize the relationships between features and the target variable (4). Included in the EDA. (4)
-- Use an interpretation tool to explain the contribution of each feature - e.g. SHAP (5)
-- Use a more advanced model such as Random Forest, or Neural Networks. (6)
-- Lock your dependencies - e.g., using pipenv, uv or pdm. (8)
-
 
 ## Data
 
@@ -36,6 +43,12 @@ The dataset contains three files:
 - `descriptions.csv`: Contains textual descriptions ( NOT USED!!)
 
 Dataset involves both numerical and categorical variables
+
+## Technical Stack
+- Python 3 and virtual environments
+- Kedro for modular pipelines
+- Scikit-learn, XGBoost, SHAP for modeling and interpretation
+- Jupyter Notebooks for EDA and result presentation
 
 ## Project Structure
 
@@ -63,155 +76,30 @@ The project have three different pipelines
 5. Run the EDA notebook
 `jupyter notebook notebooks/01_EDA.ipynb`
 6. Run the Kedro pipeline
-`kedro run`
+`cd salary_prediction; kedro run`
 
 Run V1 Only:
-Set preprocessing_version_to_run: "v1" in parameters_data_processing.yml (optional, for documentation/clarity).
-
 Execute: `kedro run --pipeline=full_v1`
 This runs pp_common, pp_v1, then only the data science nodes tagged uses_pp_v1, and finally reporting.
 
 Run V2 Only:
-Set preprocessing_version_to_run: "v2" in parameters_data_processing.yml (optional).
 Execute: `kedro run --pipeline=full_v2`
 This runs pp_common, pp_v2, then only the data science nodes tagged uses_pp_v2, and finally reporting.
 
 Run Both (Default Behavior):
-Set preprocessing_version_to_run: "both" in parameters_data_processing.yml.
 Execute: `kedro run` (runs __default__, which we mapped to full_both)
 Or explicitly: `kedro run --pipeline=full_both`
 
 This runs pp_common, pp_v1, pp_v2, all data science nodes (ds_full), and finally reporting.
 
-## Methodology
-
-Kedro was used to structure de code.
-
-### EDA
-
-Exploratory data analsysis. First a fast EDA was performed in the notebooks/01_exploratory_data_analysis.ipynb
-
-### Baseline model
-
-As suggested a DummyRegressor was implemented as the baseline model
-
-### Metrics
-
-In order to evaluate the models some regression metrics were selected
-
- - MSE (Mean Squared Error): Average squared difference between the predicted and real salaries.
- - RMSE (Root Mean Squared Error): Square root of MSE.
- - R2 (R-squared): Proportion of variace in salary explained by the model.
-
 ## Results
-1. Baseline model 
+Model | RMSE | R² Score | 95% RMSE CI | Notes
+Baseline (Dummy) | 49,022 | -0.00 | [44,125, 52,191] | Simple mean-based model
+Linear Regression | 15,551 | 0.89 | [12,962, 18,138] | Strong linear baseline
+Lasso Regression | 15,549 | 0.89 | [12,959, 18,137] | Sparse feature selection
+Random Forest | 15,369 | 0.89 | [14,063, 16,673] | Best balance accuracy/stability
+RF + SHAP Selection | 15,614 | 0.89 | [14,322, 16,905] | Similar performance, more compact
+Best Model (XGBoost) | 14,468 | 0.91 | - | Selected as final model
 
-Test:
-{
-  "mse": 2403174600.7218146,
-  "rmse": 49022.18478119692,
-  "r2_score": -0.0023325074934903434,
-  "model_type": "DummyRegressor"
-}
-
-Train with CV CI's:
-{
-  "mse": 2327671491.480214,
-  "rmse": 48158.40404560465,
-  "r2_score": -0.03205210959908009,
-  "mse_conf_interval": [
-    1941110039.546183,
-    2714232943.414245
-  ],
-  "rmse_conf_interval": [
-    44125.477453554595,
-    52191.330637654704
-  ],
-  "r2_score_conf_interval": [
-    -0.07021907803626393,
-    0.006114858838103733
-  ],
-  "model_type": "DummyRegressor"
-}
-
-2. Linear regression
-{
-  "mse": 245295119.11827332,
-  "rmse": 15550.531658798393,
-  "r2_score": 0.8913156707773544,
-  "mse_conf_interval": [
-    165826615.19786328,
-    324763623.03868335
-  ],
-  "rmse_conf_interval": [
-    12962.293461212596,
-    18138.769856384188
-  ],
-  "r2_score_conf_interval": [
-    0.8620612942374825,
-    0.9205700473172264
-  ],
-  "model_type": "LinearRegression"
-}
-
-3. RandomForestRegressor
-{
-  "mse": 237083576.69463697,
-  "rmse": 15368.801466421832,
-  "r2_score": 0.8934237853681604,
-  "mse_conf_interval": [
-    196318485.91431722,
-    277848667.4749567
-  ],
-  "rmse_conf_interval": [
-    14063.932685338918,
-    16673.670247504746
-  ],
-  "r2_score_conf_interval": [
-    0.8703175955357493,
-    0.9165299752005714
-  ],
-  "model_type": "RandomForestRegressor"
-}
-
-4. RandomForestRegressor + SHAP feature selection
-{
-  "mse": 244666229.32381254,
-  "rmse": 15614.111247418661,
-  "r2_score": 0.889959794756901,
-  "mse_conf_interval": [
-    203983160.220127,
-    285349298.4274981
-  ],
-  "rmse_conf_interval": [
-    14322.423105951186,
-    16905.799388886135
-  ],
-  "r2_score_conf_interval": [
-    0.8659463970975693,
-    0.9139731924162328
-  ],
-  "model_type": "RandomForestRegressor"
-}
-
-5. Lasso
-{
-  "mse": 245239583.6016566,
-  "rmse": 15548.702211450833,
-  "r2_score": 0.8913466435190515,
-  "mse_conf_interval": [
-    165741747.2817182,
-    324737419.921595
-  ],
-  "rmse_conf_interval": [
-    12959.958157532057,
-    18137.44626536961
-  ],
-  "r2_score_conf_interval": [
-    0.8621360968999312,
-    0.9205571901381717
-  ],
-  "model_type": "Lasso"
-}
-
-## References
+## Full Report
+The complete modeling report is available in `notebooks/02_Model_Report.ipynb`
