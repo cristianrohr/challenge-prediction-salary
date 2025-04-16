@@ -36,7 +36,8 @@
             0.9233352696479767,
             0.9191830645232408,
             0.9230534081375129
-        ]
+        ],
+        "file_name": "xgboost_pp_v2_optimized_metrics.json"
     },
     {
         "model_type": "ElasticNet",
@@ -75,7 +76,8 @@
             0.9208944876704244,
             0.9117352774207251,
             0.9325829324624981
-        ]
+        ],
+        "file_name": "enet_pp_v2_optimized_metrics.json"
     },
     {
         "model_type": "Lasso",
@@ -114,6 +116,7 @@
             0.917297808773093,
             0.9143873989190135,
             0.9348748589861637
-        ]
+        ],
+        "file_name": "lasso_pp_v2_metrics.json"
     }
 ]

@@ -9,7 +9,7 @@ from scipy.stats import ttest_rel
 from typing import List, Dict
 import plotly.graph_objects as go
 import plotly.express as px
-
+import re
 
 def select_best_model(
     all_metrics: list[dict],  # list of all model evaluation dicts
@@ -89,6 +89,7 @@ def load_all_metrics_from_folder(metrics_folder: str, _dependency_marker=None) -
             file_path = os.path.join(metrics_folder, file_name)
             with open(file_path, "r") as f:
                 metrics = json.load(f)
+                metrics["file_name"] = file_name 
                 all_metrics.append(metrics)
 
     return all_metrics
@@ -361,12 +362,20 @@ def generate_detailed_metrics_table(
     """
     rows = []
     for m in all_metrics:
+        file_name = m.get("file_name", "")
         row = {
             "Model": m["model_type"],
             "RMSE": m.get("rmse"),
             "MSE": m.get("mse"),
             "R²": m.get("r2_score"),
+            "Preprocessing": None,
+            "Used SHAP": "shap" in file_name.lower(),
+            "Used Optuna": "optimized" in file_name.lower(),
         }
+
+        # Extract preprocessing version from filename
+        pp_match = re.search(r"pp_v\d+", file_name.lower())
+        row["Preprocessing"] = pp_match.group(0) if pp_match else None
 
         if include_conf_intervals:
             row["RMSE CI"] = (
@@ -394,7 +403,7 @@ def generate_detailed_metrics_table(
 
     df = pd.DataFrame(rows)
 
-    # Export if needed
+    # Export
     if output_markdown:
         os.makedirs(os.path.dirname(output_markdown), exist_ok=True)
         with open(output_markdown, "w") as f:

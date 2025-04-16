@@ -379,3 +379,10 @@ model_performance_plots:
   metadata:
     layer: reporting
     description: "Visualization data for model performance plots"
+
+detailed_metrics_df:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/detailed_metrics_df.csv
+  metadata:
+    layer: reporting
+    description: "Detailed metrics for all models"

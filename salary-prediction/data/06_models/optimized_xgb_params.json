@@ -1,0 +1,10 @@
+{
+  "xgb_params": {
+    "n_estimators": 397,
+    "max_depth": 13,
+    "learning_rate": 0.023157728052759265,
+    "subsample": 0.6881402525415113,
+    "colsample_bytree": 0.5034961935234171
+  },
+  "random_state": 3
+}

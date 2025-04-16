@@ -10,3 +10,7 @@ reporting:
   top_n: 3
   top_n_metrics_path: data/08_reporting/top_n_model_metrics.json
   scatter_plot_path: data/08_reporting/model_scatter_plot.png
+  include_conf_intervals: true
+  include_fold_scores: true
+  output_markdown_path: data/08_reporting/detailed_metrics_table.md
+  output_html_path: data/08_reporting/detailed_metrics_table.html
