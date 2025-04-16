@@ -66,7 +66,9 @@ The project have three different pipelines
 ## Installation & Setup
 
 1. Clone the repository
-`git clone https://github.com/cristianrohr/challenge-prediction-salary.git`
+`git clone https://github.com/cristianrohr/challenge-prediction-salary.git
+cd challenge-prediction-salary
+`
 2. Create a virtual environment
 `python3 -m venv venv`
 3. Activate the virtual environment
