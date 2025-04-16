@@ -365,7 +365,8 @@ def evaluate_model(
 
 
 def evaluate_model_with_cv(
-    model, X_train: ParquetDataset, y_train: ParquetDataset, parameters: dict
+    model, X_train: ParquetDataset, y_train: ParquetDataset, parameters: dict,
+    model_name: str = None
 ) -> dict[str, float]:
     """
     Calculates and returns regression performance metrics using cross-validation 
@@ -376,6 +377,7 @@ def evaluate_model_with_cv(
         X_train: Training data of independent features.
         y_train: True values of the target variable.
         cv: Number of folds for cross-validation.
+        model_name: Name of the model for which the metrics are calculated.
 
     Returns:
         Dictionary with MSE, RMSE, and R2 scores along with 95% confidence intervals.
@@ -401,13 +403,17 @@ def evaluate_model_with_cv(
     r2_conf_int = st.t.interval(parameters["ci"], len(r2_scores)-1, loc=r2_mean, scale=st.sem(r2_scores))
 
     return {
+        "model_type": str(type(model).__name__),
+        "model_name": model_name or str(type(model).__name__),
         "mse": mse_mean,
         "rmse": rmse_mean,
         "r2_score": r2_mean,
         "mse_conf_interval": mse_conf_int,
         "rmse_conf_interval": rmse_conf_int,
         "r2_score_conf_interval": r2_conf_int,
-        "model_type": str(type(model).__name__),
+        "mse_folds": list(-mse_scores),
+        "rmse_folds": list(rmse_scores),
+        "r2_folds": list(r2_scores),
     }
 
 
