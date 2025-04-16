@@ -365,8 +365,7 @@ def evaluate_model(
 
 
 def evaluate_model_with_cv(
-    model, X_train: ParquetDataset, y_train: ParquetDataset, parameters: dict,
-    model_name: str = None
+    model, X_train: ParquetDataset, y_train: ParquetDataset, parameters: dict
 ) -> dict[str, float]:
     """
     Calculates and returns regression performance metrics using cross-validation 
@@ -404,7 +403,7 @@ def evaluate_model_with_cv(
 
     return {
         "model_type": str(type(model).__name__),
-        "model_name": model_name or str(type(model).__name__),
+        #"model_name": str(type(model).__name__),
         "mse": mse_mean,
         "rmse": rmse_mean,
         "r2_score": r2_mean,
