@@ -70,12 +70,14 @@ def generate_sorted_metrics_csv(
     df_sorted = df.sort_values(by=sort_by, ascending=ascending)
     return df_sorted
 
-def load_all_metrics_from_folder(metrics_folder: str) -> List[Dict]:
+def load_all_metrics_from_folder(metrics_folder: str, _dependency_marker=None) -> List[Dict]:
+
     """
     Loads all JSON files from a folder and returns them as a list of dicts.
 
     Args:
         metrics_folder: Path to the folder containing metric JSON files.
+        _dependency_marker: Marker to ensure this node is called directly and not imported.
 
     Returns:
         List of model metrics as dictionaries.
@@ -176,6 +178,18 @@ def select_best_model_by_multiple_metrics(
     metrics: List[str],
     ascending_flags: List[bool]
 ) -> Dict:
+    """
+    Selects the best model based on a given metric.
+
+    Args:
+        all_metrics: List of dictionaries containing model metrics.
+        metrics: List of metrics to consider for selection.
+        ascending_flags: List of booleans indicating whether to use ascending order for the metrics.
+
+    Returns:
+        Dictionary containing the name of the best model and its metrics.
+    """
+
     df = pd.DataFrame(all_metrics)
     for metric, ascending in zip(metrics, ascending_flags):
         df[f"{metric}_rank"] = df[metric].rank(ascending=ascending)
@@ -190,19 +204,65 @@ def select_best_model_by_multiple_metrics(
 def get_top_n_models(
     all_metrics: List[Dict], sort_by: str, top_n: int = 3, ascending: bool = True
 ) -> List[Dict]:
+    """
+    Returns the top N models based on a given metric, sorted in ascending or descending order.
+
+    Args:
+        all_metrics: List of dictionaries containing model metrics.
+        sort_by: Metric to use for sorting.
+        top_n: Number of top models to return.
+        ascending: Whether to use ascending order (True for metrics like RMSE/MSE, False for R²).
+
+    Returns:
+        List of dictionaries containing top N models.
+    """
     return sorted(all_metrics, key=lambda m: m[sort_by], reverse=not ascending)[:top_n]
 
 def reject_models_with_wide_ci(
     all_metrics: List[Dict], max_ci_width: float = 10000
 ) -> List[Dict]:
+    """
+    Rejects models with confidence intervals wider than a given threshold.
+
+    Args:
+        all_metrics: List of dictionaries containing model metrics.
+        max_ci_width: Maximum allowed width of confidence interval.
+
+    Returns:
+        List of dictionaries containing rejected models.
+    """
     return [
         m for m in all_metrics
         if (m["rmse_conf_interval"][1] - m["rmse_conf_interval"][0]) < max_ci_width
     ]
 
+def save_top_n_metrics(
+    top_models: List[Dict], output_path: str
+):
+    """
+    Saves a list of top models to a JSON file.
+
+    Args:
+        top_models: List of dictionaries containing model metrics.
+        output_path: Path to save the JSON file.
+    """
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(top_models, f, indent=4)
+
 def compare_models_statistically(
     metrics_list: List[Dict], metric: str = "rmse"
 ) -> pd.DataFrame:
+    """
+    Compares the performance of models statistically.
+
+    Args:
+        metrics_list: List of dictionaries containing model metrics.
+        metric: Metric to compare. Default is "rmse".
+
+    Returns:
+        DataFrame with comparison results.
+    """
     comparisons = []
     for i, m1 in enumerate(metrics_list):
         for j, m2 in enumerate(metrics_list):
@@ -214,39 +274,25 @@ def compare_models_statistically(
                     "p_value": p_value
                 })
     return pd.DataFrame(comparisons)
-
-def save_top_n_metrics(
-    top_models: List[Dict], output_path: str
-):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(top_models, f, indent=4)
-
-def compare_models_statistically(
-    metrics_list: List[Dict], metric: str = "rmse"
-) -> pd.DataFrame:
-    comparisons = []
-    for i, m1 in enumerate(metrics_list):
-        for j, m2 in enumerate(metrics_list):
-            if i < j and metric + "_folds" in m1 and metric + "_folds" in m2:
-                t_stat, p_value = ttest_rel(m1[metric + "_folds"], m2[metric + "_folds"])
-                comparisons.append({
-                    "model_1": m1["model_type"],
-                    "model_2": m2["model_type"],
-                    "p_value": p_value
-                })
-    return pd.DataFrame(comparisons)
-
-def save_top_n_metrics(
-    top_models: List[Dict], output_path: str
-):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(top_models, f, indent=4)
 
 def plot_model_comparison_scatter(
     all_metrics: List[Dict], output_path: str
 ):
+    """
+    Plots a scatter plot comparing RMSE and R² scores.
+
+    Args:
+        all_metrics: List of dictionaries containing model metrics.
+        output_path: Path to save the scatter plot.
+    """
+
+    # filter models with neccesary fields
+    required_keys = ["rmse_conf_interval", "r2_score_conf_interval", "rmse", "r2_score"]
+    filtered = [m for m in all_metrics if all(k in m for k in required_keys)]
+
+    if not filtered:
+        raise ValueError("No models contain all required confidence interval keys.")
+
     df = pd.json_normalize(all_metrics)
 
     def extract(val, index):
@@ -292,3 +338,70 @@ def plot_model_comparison_scatter(
 
     fig.write_image(output_path)
     return fig
+
+def generate_detailed_metrics_table(
+    all_metrics: List[Dict],
+    include_conf_intervals: bool = True,
+    include_fold_scores: bool = False,
+    output_markdown: str = None,
+    output_html: str = None
+) -> pd.DataFrame:
+    """
+    Generates a detailed comparison table of model metrics.
+
+    Args:
+        all_metrics: List of model metrics dictionaries.
+        include_conf_intervals: Whether to include confidence intervals.
+        include_fold_scores: Whether to include cross-validation fold scores.
+        output_markdown: Optional path to save markdown version.
+        output_html: Optional path to save HTML version.
+
+    Returns:
+        Formatted pandas DataFrame.
+    """
+    rows = []
+    for m in all_metrics:
+        row = {
+            "Model": m["model_type"],
+            "RMSE": m.get("rmse"),
+            "MSE": m.get("mse"),
+            "R²": m.get("r2_score"),
+        }
+
+        if include_conf_intervals:
+            row["RMSE CI"] = (
+                f"[{m['rmse_conf_interval'][0]:.2f}, {m['rmse_conf_interval'][1]:.2f}]"
+                if "rmse_conf_interval" in m else None
+            )
+            row["MSE CI"] = (
+                f"[{m['mse_conf_interval'][0]:.2f}, {m['mse_conf_interval'][1]:.2f}]"
+                if "mse_conf_interval" in m else None
+            )
+            row["R² CI"] = (
+                f"[{m['r2_score_conf_interval'][0]:.2f}, {m['r2_score_conf_interval'][1]:.2f}]"
+                if "r2_score_conf_interval" in m else None
+            )
+
+        if include_fold_scores:
+            row["RMSE folds"] = (
+                ", ".join([f"{v:.2f}" for v in m["rmse_folds"]]) if "rmse_folds" in m else None
+            )
+            row["R² folds"] = (
+                ", ".join([f"{v:.2f}" for v in m["r2_score_folds"]]) if "r2_score_folds" in m else None
+            )
+
+        rows.append(row)
+
+    df = pd.DataFrame(rows)
+
+    # Export if needed
+    if output_markdown:
+        os.makedirs(os.path.dirname(output_markdown), exist_ok=True)
+        with open(output_markdown, "w") as f:
+            f.write(df.to_markdown(index=False))
+
+    if output_html:
+        os.makedirs(os.path.dirname(output_html), exist_ok=True)
+        df.to_html(output_html, index=False)
+
+    return df
